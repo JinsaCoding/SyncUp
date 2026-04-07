@@ -12,7 +12,7 @@ export const GlobalStyles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 10,
-    width: '100%'
+    width: "100%",
   },
 
   scrollContainer: {
@@ -21,8 +21,8 @@ export const GlobalStyles = StyleSheet.create({
   },
 
   scrollContent: {
-    alignItems: 'center',
-    paddingRight: 10, 
+    alignItems: "center",
+    paddingRight: 10,
   },
 
   tab: {
@@ -42,66 +42,66 @@ export const GlobalStyles = StyleSheet.create({
 
   settingsIcon: {
     fontSize: 24,
-    alignSelf: 'flex-end'
+    alignSelf: "flex-end",
   },
 
   body: {
     flex: 1,
-    alignItems: 'center',
-    paddingTop: 0
+    alignItems: "center",
+    paddingTop: 0,
   },
   calendarPlaceholder: {
-    height: 120,                
-    width: '100%',
-    backgroundColor: '#252525',
+    height: 120,
+    width: "100%",
+    backgroundColor: "#252525",
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#444',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#444",
+    justifyContent: "center",
+    alignItems: "center",
   },
   placeholderText: {
-    color: '#555',
+    color: "#555",
     fontSize: 14,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   tabSwitcher: {
-    flexDirection: 'row',
-    backgroundColor: '#333',
-    borderRadius: 20,
-    marginTop: 5, 
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#555',
-  },
-  tabSwitcherBottom: {
-    flexDirection: 'row',
-    backgroundColor: '#333',
+    flexDirection: "row",
+    backgroundColor: "#333",
     borderRadius: 20,
     marginTop: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 2,
-    borderColor: '#555',
-    alignContent: 'flex-end',
-    position: 'absolute',
+    borderColor: "#555",
+  },
+  tabSwitcherBottom: {
+    flexDirection: "row",
+    backgroundColor: "#333",
+    borderRadius: 20,
+    marginTop: 5,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#555",
+    alignContent: "flex-end",
+    position: "absolute",
     bottom: 50,
   },
   middleTab: {
     paddingHorizontal: 25,
     paddingVertical: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   middleTabActive: {
-    backgroundColor: '#555', 
+    backgroundColor: "#555",
   },
   middleTabText: {
     fontSize: 20,
   },
   contentArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   icons: {
     width: 24,
@@ -134,6 +134,32 @@ export const GlobalStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "black",
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
+  eventCard: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+
+  eventTitle: {
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  eventTime: {
+    fontSize: 14,
+    color: "#555",
+  },
+
+  eventLocation: {
+    fontSize: 12,
+    color: "#888",
+  },
 });
