@@ -2,9 +2,9 @@
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import { useEffect, useState } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Modal, Pressable, ScrollView, Text, TouchableOpacity, View, Switch } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlobalStyles as styles } from "./styles";
+import { GlobalStyles as styles, GlobalThemes} from "./styles";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -31,6 +31,9 @@ function HomeScreen() {
   const days   = ["Today", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const [activeTab, setActiveTab] = useState("events")
   const [openEventOptions, setOpenEventOptions] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const colors = GlobalThemes[theme];
 
   useEffect(() =>  {
     (async () => {
@@ -58,28 +61,32 @@ function HomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+
       {/*The Header Section (TOP) */}
       <View style={styles.header}>
+
         <View style={styles.scrollContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {days.map((day) => (
-              <TouchableOpacity key={day} style={styles.tab}>
-                <Text style={styles.tabText}>{day}</Text>
-              </TouchableOpacity>))}
+              <TouchableOpacity key={day} style={[styles.tab, { borderColor: colors.text }]}>
+                <Text style={[styles.tabText, { color: colors.text }]}>{day}</Text>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
-        <TouchableOpacity onPress={() => alert('Settings Pressed!')}>
-          <Text style={styles.settingsIcon}>⚙️</Text>
+
+        <TouchableOpacity onPress={() => setOpenSettings(true)}>
+          <Text style={[styles.settingsIcon, { color: colors.text }]}>⚙️</Text>
         </TouchableOpacity>
+
       </View>
       
       {/*The Timeline Section (Middle) */}
-      <View style={styles.calendarPlaceholder}>
-        <Text style={styles.placeholderText}>Timeline Section Here</Text>
+      <View style={[styles.calendarPlaceholder, { backgroundColor: theme === 'dark' ? '#252525' : '#e0e0e0', borderColor: colors.border }]}>
+        <Text style={[styles.placeholderText, { color: theme === 'dark' ? '#777' : '#999' }]}>
+          Timeline Section Here
+        </Text>
       </View>
 
       {/*The Content Area (Bottom) */}
@@ -111,6 +118,43 @@ function HomeScreen() {
             </Pressable>
           </Modal>
 
+          <Modal visible={openSettings} transparent={true} animationType="fade">
+            <Pressable style={styles.card_background} onPress={() => setOpenSettings(false)}>
+              <View style={[styles.card, { backgroundColor: colors.card, paddingVertical: 30 }]}>
+                
+                <Text style={[styles.menuText, { color: colors.text, marginBottom: 20 }]}>
+                  Settings
+                </Text>
+
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  width: '100%',
+                  paddingHorizontal: 10,
+                  marginBottom: 20 }}>
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '500' }}>
+                    {theme === "dark" ? "🌙 Dark Mode" : "☀️ Light Mode"}
+                  </Text>
+                  
+                  <Switch
+                    trackColor={{ false: "#767577", true: "#81b0ff" }}
+                    thumbColor={theme === "dark" ? "#f4f3f4" : "#f4f3f4"}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    value={theme === "dark"}/>
+                </View>
+
+                <TouchableOpacity 
+                  onPress={() => setOpenSettings(false)} 
+                  style={[styles.cancel_button, { backgroundColor: colors.accent, width: '100%' }]}>
+                  <Text style={[styles.menuText, { color: "#fff", fontSize: 14 }]}>DONE</Text>
+                </TouchableOpacity>
+
+              </View>
+            </Pressable>
+          </Modal>
+
           <TouchableOpacity 
             style={[styles.middleTab, openEventOptions === true && styles.middleTabActive]}
             onPress={() => setOpenEventOptions(true)}>
@@ -125,7 +169,6 @@ function HomeScreen() {
         </View>
       </View>
 
-      
     </View>
   );
 }
