@@ -8,12 +8,12 @@
     "scheme": "syncup",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "infoPlist": {
-        "NSUserNotificationUsageDescription": "SyncUp needs permission to send you notifications about your upcoming events.",
-        "NSCalendarUsageDescription": "SynchUp needs access to your calendar to display your events."
-      },
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.SyncUp"
+      "bundleIdentifier": "edu.uic.syncup",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "SyncUp uses notifications to keep you updated about your events.",
+        "NSCalendarUsageDescription": "SynchUp needs access to your calendar to display your events."
+      }
     },
     "android": {
       "permissions": ["android.permission.POST_NOTIFICATIONS"],

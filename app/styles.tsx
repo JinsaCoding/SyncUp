@@ -1,5 +1,22 @@
 import { StyleSheet } from "react-native";
-
+export const GlobalThemes = {
+  light: {
+    background: "#f0f0f0",
+    text: "#1a1a1a",
+    card: "#ffffff",
+    accent: "#333333",
+    border: "#cccccc",
+    tabActive: "#dddddd",
+  },
+  dark: {
+    background: "#1a1a1a",
+    text: "#ffffff",
+    card: "grey",
+    accent: "#333333",
+    border: "#444444",
+    tabActive: "#555555",
+  },
+};
 export const GlobalStyles = StyleSheet.create({
   container: {
     flex: 1,
