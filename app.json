@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.uic.syncup",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "SyncUp uses notifications to keep you updated about your events."
+      }
     },
     "android": {
       "permissions": [
