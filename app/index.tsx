@@ -17,7 +17,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { GlobalStyles as styles } from "../styles/styles";
+import { GlobalStyles as styles } from "./styles";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
