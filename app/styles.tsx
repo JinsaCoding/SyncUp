@@ -1,9 +1,27 @@
 import { StyleSheet } from "react-native";
 
+export const GlobalThemes = {
+  light: {
+    background: "#f0f0f0",
+    text: "#1a1a1a",
+    card: "#ffffff",
+    accent: "#333333",
+    border: "#cccccc",
+    tabActive: "#dddddd",
+  },
+  dark: {
+    background: "#1a1a1a",
+    text: "#ffffff",
+    card: "grey",
+    accent: "#333333",
+    border: "#444444",
+    tabActive: "#555555",
+  }
+};
+
 export const GlobalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a1a",
   },
 
   header: {
@@ -27,7 +45,6 @@ export const GlobalStyles = StyleSheet.create({
 
   tab: {
     borderWidth: 1.5,
-    borderColor: "#fff",
     paddingHorizontal: 15,
     paddingVertical: 6,
     borderRadius: 6,
@@ -35,7 +52,7 @@ export const GlobalStyles = StyleSheet.create({
   },
 
   tabText: {
-    color: "#fff",
+
     fontSize: 16,
     fontWeight: "600",
   },
@@ -53,7 +70,6 @@ export const GlobalStyles = StyleSheet.create({
   calendarPlaceholder: {
     height: 120,                
     width: '100%',
-    backgroundColor: '#252525',
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: '#444',
@@ -61,7 +77,6 @@ export const GlobalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   placeholderText: {
-    color: '#555',
     fontSize: 14,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -111,7 +126,6 @@ export const GlobalStyles = StyleSheet.create({
     flex: 1,
     width: "45%",
     padding: 20,
-    backgroundColor: "grey",
     borderRadius: 10,
     justifyContent: "flex-end",
     marginTop: "120%",
@@ -133,7 +147,6 @@ export const GlobalStyles = StyleSheet.create({
   menuText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "black",
     textAlign: "center"
   }
 });
