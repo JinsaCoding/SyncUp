@@ -179,4 +179,29 @@ export const GlobalStyles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
+  bottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
+    borderTopWidth: 1,
+    paddingTop: 10,
+  },
+
+  bottomBtn: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 8,
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+
+  bottomIcon: {
+    fontSize: 20,
+  },
+
+  bottomLabel: {
+    fontSize: 11,
+    marginTop: 3,
+  },
 });
