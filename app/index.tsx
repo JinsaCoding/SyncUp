@@ -321,7 +321,16 @@ function HomeScreen() {
   const colors = GlobalThemes[theme];
 
   // Weekday labels shown at the top.
-  const days = ["Today", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const [selectedDay, setSelectedDay] = useState(0);
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      label: i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+      date: d,
+    };
+  });
 
   const [manualEvents, setManualEvents] = useState<TimelineEvent[]>([]);
 
@@ -444,12 +453,26 @@ function HomeScreen() {
       });
 
     // Merge manually added events and re-sort
-    return [...converted, ...manualEvents].sort((a, b) => {
+    return [...converted, ...manualEvents]
+    .filter((event) => {
+      const selected = days[selectedDay].date;
+      // for calendar events, check the original event's date
+      if (event.originalEvent?.startDate) {
+        const eventDate = new Date(event.originalEvent.startDate);
+        return (
+          eventDate.getFullYear() === selected.getFullYear() &&
+          eventDate.getMonth() === selected.getMonth() &&
+          eventDate.getDate() === selected.getDate()
+        );
+      }
+      // for manual events, always show on Today for now
+      return selectedDay === 0;})
+    .sort((a, b) => {
       const aMinutes = a.startHour * 60 + a.startMinute;
       const bMinutes = b.startHour * 60 + b.startMinute;
       return aMinutes - bMinutes;
     });
-  }, [events, manualEvents]);
+  }, [events, manualEvents, selectedDay]);
 
   // Finds the currently selected event object from the selected ID.
   const selectedEvent =
@@ -576,22 +599,29 @@ function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabsScrollContent}
-          >
-            {days.map((day) => (
-              <View
-                key={day}
-                style={[styles.tab, { borderColor: colors.border }]}
-              >
-                <Text style={[styles.text, { color: colors.text }]}>{day}</Text>
-              </View>
+            contentContainerStyle={styles.tabsScrollContent}>
+            {days.map((day, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedDay(index);
+                  setSelectedId(null);
+                }}
+                style={[
+                  styles.tab,
+                  { borderColor: colors.border },
+                  selectedDay === index && {
+                    backgroundColor: theme === "dark" ? "#4a4a4a" : "#d7d7d7",
+                  },
+                ]}>
+                <Text style={[styles.text, { color: colors.text }]}>{day.label}</Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
           <TouchableOpacity
             style={[styles.settingsTab, { borderColor: colors.border }]}
-            onPress={() => setOpenSettings(true)}
-          >
+            onPress={() => setOpenSettings(true)}>
             <Text style={[styles.text, { color: colors.text }]}>⚙</Text>
           </TouchableOpacity>
         </View>
