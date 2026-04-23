@@ -3,7 +3,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import * as Calendar from "expo-calendar";
 import * as Notifications from "expo-notifications";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -22,6 +22,8 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { GlobalStyles, GlobalThemes } from "./styles";
+
+import { useContacts } from "./social";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -79,6 +81,8 @@ function AddEventForm({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const { contacts, addContact, deleteContact } = useContacts();
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("en-US", {
@@ -915,7 +919,10 @@ function HomeScreen() {
                 backgroundColor: theme === "dark" ? "#4a4a4a" : "#d7d7d7",
               },
             ]}
-            onPress={() => setActiveTab("social")}
+            onPress={() => {
+              setActiveTab("social");
+              router.push('/social');
+            }}
           >
             <Text style={[GlobalStyles.bottomIcon, { color: colors.text }]}>
               👥
