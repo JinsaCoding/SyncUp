@@ -204,4 +204,91 @@ export const GlobalStyles = StyleSheet.create({
     fontSize: 11,
     marginTop: 3,
   },
+  chatContainer: {
+  flex: 1,
+  },
+
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+
+  chatBackBtn: {
+    width: 60,
+  },
+
+  chatBackText: {
+    fontSize: 15,
+  },
+
+  chatHeaderTitle: {
+    fontSize: 17,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+
+  chatMessageList: {
+    padding: 16,
+    gap: 10,
+  },
+
+  chatBubble: {
+    maxWidth: "75%",
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+
+  chatBubbleMe: {
+    alignSelf: "flex-end",
+  },
+
+  chatBubbleThem: {
+    alignSelf: "flex-start",
+  },
+
+  chatBubbleText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  chatTimestamp: {
+    fontSize: 10,
+    opacity: 0.5,
+    marginTop: 4,
+    textAlign: "right",
+  },
+
+  chatQuickReplyWrapper: {
+    borderTopWidth: 1,
+    padding: 12,
+  },
+
+  chatQuickReplyLabel: {
+    fontSize: 11,
+    opacity: 0.6,
+    marginBottom: 8,
+  },
+
+  chatQuickReplyRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  chatQuickReplyBtn: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+
+  chatQuickReplyText: {
+    fontSize: 13,
+  },
+
 });
