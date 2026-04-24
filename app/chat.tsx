@@ -9,7 +9,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GlobalStyles, GlobalThemes } from "./styles";
+import { useTheme } from './context/ThemeContext';
+import { GlobalStyles } from "./styles";
 
 type Message = {
   id: string;
@@ -39,7 +40,8 @@ const BOT_REPLIES: Record<string, string> = {
 export default function ChatScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const router = useRouter();
-  const colors = GlobalThemes["dark"];
+  // const colors = GlobalThemes["dark"];
+  const { colors } = useTheme();
 
   const insets = useSafeAreaInsets(); // used for avoiding overlap with top and bottom menus on phones
 

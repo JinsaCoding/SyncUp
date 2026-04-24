@@ -12,7 +12,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Contact, Group } from './context/ContactContext';
 import { useContacts } from './context/ContactContext';
-import { GlobalStyles, GlobalThemes } from "./styles";
+import { useTheme } from './context/ThemeContext';
+import { GlobalStyles } from "./styles";
 
 export default function SocialScreen() {
     const { contacts,
@@ -28,24 +29,24 @@ export default function SocialScreen() {
 
     const router = useRouter();
     const insets = useSafeAreaInsets(); // used for avoiding overlap with top and bottom menus on phones
-    const colors = GlobalThemes['dark'];
+    const { colors } = useTheme();
 
     const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
 
-  const [openModal, setOpenModal] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
 
-  const [newName, setNewName] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [newEmail, setNewEmail] = useState("");
+    const [newName, setNewName] = useState("");
+    const [newPhone, setNewPhone] = useState("");
+    const [newEmail, setNewEmail] = useState("");
 
-  const [showEditModal, setShowEditModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [editedName, setEditedName] = useState("");
-  const [editedPhone, setEditedPhone] = useState("");
-  const [editedEmail, setEditedEmail] = useState("");
+    const [editingContact, setEditingContact] = useState<Contact | null>(null);
+    const [editedName, setEditedName] = useState("");
+    const [editedPhone, setEditedPhone] = useState("");
+    const [editedEmail, setEditedEmail] = useState("");
 
-  const [searchText, setSearchText] = useState("");
+    const [searchText, setSearchText] = useState("");
 
     const [menuContact, setMenuContact] = useState<Contact | null>(null);
     const [showMenuModal, setShowMenuModal] = useState(false);
@@ -174,131 +175,71 @@ export default function SocialScreen() {
   /* ➕ */
 
     return (
-        <View style={[GlobalStyles.social_page_body, { paddingBottom: insets.bottom, paddingTop: insets.top }]}>
-            <View
-                style={[GlobalStyles.chatHeader, { borderBottomColor: colors.border }]}
-            >
-                <TouchableOpacity
-                onPress={() => router.back()}
-                style={GlobalStyles.chatBackBtn}
-                >
-                <Text style={[GlobalStyles.chatBackText, { color: colors.text }]}>
-                    ← Back
-                </Text>
+        <View style={[GlobalStyles.social_page_body, { paddingBottom: insets.bottom, paddingTop: insets.top, backgroundColor: colors.background }]}>
+            
+            {/* Header */}
+            <View style={[GlobalStyles.chatHeader, { borderBottomColor: colors.border }]}>
+                <TouchableOpacity onPress={() => router.back()} style={GlobalStyles.chatBackBtn}>
+                    <Text style={[GlobalStyles.chatBackText, { color: colors.text }]}>← Back</Text>
                 </TouchableOpacity>
-                <Text style={[GlobalStyles.chatHeaderTitle, { color: colors.text }]}>
-                Social
-                </Text>
+                <Text style={[GlobalStyles.chatHeaderTitle, { color: colors.text }]}>Social</Text>
                 <View style={GlobalStyles.chatBackBtn} />
             </View>
 
             {/*************************** Add Contact Modal *******************************/}
-            <Modal visible={openModal} transparent={true} animationType="slide">
+            <Modal visible={openModal} transparent animationType="slide">
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setOpenModal(false)}>
-
-                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>0
-                        <Text style={GlobalStyles.modal_title}>Add Contact</Text>
-
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Name"
-                            value={newName}
-                            onChangeText={setNewName}
-                        />
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Phone"
-                            value={newPhone}
-                            onChangeText={setNewPhone}
-                        />
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Email"
-                            value={newEmail}
-                            onChangeText={setNewEmail}
-                        />
-                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleAddContact}>
-                            <Text style={GlobalStyles.modal_button_text}>Add Contact</Text>
+                    <TouchableOpacity style={[GlobalStyles.modal_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.modal_title, { color: colors.text }]}>Add Contact</Text>
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Name" placeholderTextColor="#888" value={newName} onChangeText={setNewName} />
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Phone" placeholderTextColor="#888" value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" />
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Email" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" />
+                        <TouchableOpacity style={[GlobalStyles.modal_button, { backgroundColor: colors.accent, borderColor: colors.border }]} onPress={handleAddContact}>
+                            <Text style={[GlobalStyles.modal_button_text, { color: colors.text }]}>Add Contact</Text>
                         </TouchableOpacity>
-                        <Text style={GlobalStyles.modal_cancel} onPress={() => setOpenModal(false)}>
-                            Cancel
-                        </Text>
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setOpenModal(false)}>Cancel</Text>
                     </TouchableOpacity>
-                    
                 </TouchableOpacity>
             </Modal>
-            
+
             {/*************************** Edit Contact Modal *******************************/}
-            <Modal visible={showEditModal} transparent={true} animationType="slide">
+            <Modal visible={showEditModal} transparent animationType="slide">
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowEditModal(false)}>
-                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
-                        <Text style={GlobalStyles.modal_title}>Edit Contact</Text>
-
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Name"
-                            value={editedName}
-                            onChangeText={setEditedName}
-                        />
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Phone"
-                            value={editedPhone}
-                            onChangeText={setEditedPhone}
-                        />
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Email"
-                            value={editedEmail}
-                            onChangeText={setEditedEmail}
-                        />
-                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleEditContact}>
-                            <Text style={GlobalStyles.modal_button_text}>Save Changes</Text>
+                    <TouchableOpacity style={[GlobalStyles.modal_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.modal_title, { color: colors.text }]}>Edit Contact</Text>
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Name" placeholderTextColor="#888" value={editedName} onChangeText={setEditedName} />
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Phone" placeholderTextColor="#888" value={editedPhone} onChangeText={setEditedPhone} keyboardType="phone-pad" />
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Email" placeholderTextColor="#888" value={editedEmail} onChangeText={setEditedEmail} keyboardType="email-address" />
+                        <TouchableOpacity style={[GlobalStyles.modal_button, { backgroundColor: colors.accent, borderColor: colors.border }]} onPress={handleEditContact}>
+                            <Text style={[GlobalStyles.modal_button_text, { color: colors.text }]}>Save Changes</Text>
                         </TouchableOpacity>
-                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowEditModal(false)}>
-                            Cancel
-                        </Text>
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowEditModal(false)}>Cancel</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
 
-            {/********************************* 3-Dot Contact Menu *********************************/}
+            {/*************************** 3-Dot Contact Menu *******************************/}
             <Modal visible={showMenuModal} transparent animationType="fade">
-                {/* Tap outside the menu card to close it */}
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowMenuModal(false)}>
-                    <TouchableOpacity style={GlobalStyles.menu_card} activeOpacity={1}>
+                    <TouchableOpacity style={[GlobalStyles.menu_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.menu_contact_name, { color: colors.text }]}>{menuContact?.name}</Text>
 
-                        {/* Shows the contact's name at the top so the user knows who they're acting on */}
-                        <Text style={GlobalStyles.menu_contact_name}>{menuContact?.name}</Text>
-                        {/* Edit Contact */}
-                        <TouchableOpacity
-                            style={GlobalStyles.menu_option}
-                            onPress={() => menuContact && openEditContactModal(menuContact)}
-                        >
-                            <Text style={GlobalStyles.menu_option_text}>✏️  Edit</Text>
+                        <TouchableOpacity style={GlobalStyles.menu_option} onPress={() => menuContact && openEditContactModal(menuContact)}>
+                            <Text style={[GlobalStyles.menu_option_text, { color: colors.text }]}>✏️  Edit</Text>
                         </TouchableOpacity>
-                        <View style={GlobalStyles.menu_divider} />
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
-                        {/* Add to Group */}
                         <TouchableOpacity style={GlobalStyles.menu_option} onPress={openGroupPicker}>
-                            <Text style={GlobalStyles.menu_option_text}>👥  Add to Group</Text>
+                            <Text style={[GlobalStyles.menu_option_text, { color: colors.text }]}>👥  Add to Group</Text>
                         </TouchableOpacity>
-                        <View style={GlobalStyles.menu_divider} />
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
-                        {/* Delete Contact */}
-                        <TouchableOpacity
-                            style={GlobalStyles.menu_option}
-                            onPress={handleDelete}
-                        >
+                        <TouchableOpacity style={GlobalStyles.menu_option} onPress={handleDelete}>
                             <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Remove</Text>
                         </TouchableOpacity>
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
-                        <View style={GlobalStyles.menu_divider} />
-                        
-                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowMenuModal(false)}>
-                            Cancel
-                        </Text>
-
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowMenuModal(false)}>Cancel</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
@@ -306,39 +247,30 @@ export default function SocialScreen() {
             {/*************************** Group Picker Modal *******************************/}
             <Modal visible={showGroupPickerModal} transparent animationType="slide">
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowGroupPickerModal(false)}>
-                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
-                        <Text style={GlobalStyles.modal_title}>Add to Group</Text>
+                    <TouchableOpacity style={[GlobalStyles.modal_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.modal_title, { color: colors.text }]}>Add to Group</Text>
 
-                        {/* Create a brand new group */}
-                        <Text style={GlobalStyles.group_picker_label}>Create new group</Text>
-                        <TextInput
-                            style={GlobalStyles.modal_input}
-                            placeholder="Group name"
-                            placeholderTextColor="#888"
-                            value={newGroupName}
-                            onChangeText={setNewGroupName}
-                        />
-                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleCreateNewGroup}>
-                            <Text style={GlobalStyles.modal_button_text}>Create & Add</Text>
+                        <Text style={[GlobalStyles.group_picker_label, { color: colors.text }]}>Create new group</Text>
+                        <TextInput style={GlobalStyles.modal_input} placeholder="Group name" placeholderTextColor="#888" value={newGroupName} onChangeText={setNewGroupName} />
+                        <TouchableOpacity style={[GlobalStyles.modal_button, { backgroundColor: colors.accent, borderColor: colors.border }]} onPress={handleCreateNewGroup}>
+                            <Text style={[GlobalStyles.modal_button_text, { color: colors.text }]}>Create & Add</Text>
                         </TouchableOpacity>
 
-                        {/* Or pick an existing group */}
                         {groups.length > 0 && (
                             <>
-                                <Text style={[GlobalStyles.group_picker_label, { marginTop: 16 }]}>Add to existing group</Text>
+                                <Text style={[GlobalStyles.group_picker_label, { color: colors.text, marginTop: 16 }]}>Add to existing group</Text>
                                 {groups.map(g => (
                                     <TouchableOpacity
                                         key={g.id}
-                                        style={GlobalStyles.group_picker_row}
+                                        style={[GlobalStyles.group_picker_row, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}
                                         onPress={() => handleAddToExistingGroup(g.id)}
                                     >
-                                        <Text style={GlobalStyles.group_picker_row_text}>{g.name}</Text>
-                                        <Text style={GlobalStyles.group_picker_count}>{g.memberIds.length} members</Text>
+                                        <Text style={[GlobalStyles.group_picker_row_text, { color: colors.text }]}>{g.name}</Text>
+                                        <Text style={[GlobalStyles.group_picker_count, { color: colors.text, opacity: 0.6 }]}>{g.memberIds.length} members</Text>
                                     </TouchableOpacity>
                                 ))}
                             </>
                         )}
-
                         <Text style={GlobalStyles.modal_cancel} onPress={() => setShowGroupPickerModal(false)}>Cancel</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
@@ -347,37 +279,34 @@ export default function SocialScreen() {
             {/*************************** Group 3-Dot Menu *******************************/}
             <Modal visible={showGroupMenuModal} transparent animationType="fade">
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowGroupMenuModal(false)}>
-                    <TouchableOpacity style={GlobalStyles.menu_card} activeOpacity={1}>
-                        <Text style={GlobalStyles.menu_contact_name}>{menuGroup?.name}</Text>
-                        <View style={GlobalStyles.menu_divider} />
+                    <TouchableOpacity style={[GlobalStyles.menu_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.menu_contact_name, { color: colors.text }]}>{menuGroup?.name}</Text>
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
                         <TouchableOpacity style={GlobalStyles.menu_option} onPress={() => menuGroup && openEditGroupModal(menuGroup)}>
-                            <Text style={GlobalStyles.menu_option_text}>✏️  Edit Members</Text>
+                            <Text style={[GlobalStyles.menu_option_text, { color: colors.text }]}>✏️  Edit Members</Text>
                         </TouchableOpacity>
-                        <View style={GlobalStyles.menu_divider} />
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
                         <TouchableOpacity style={GlobalStyles.menu_option} onPress={handleDeleteGroup}>
                             <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Delete Group</Text>
                         </TouchableOpacity>
-                        <View style={GlobalStyles.menu_divider} />
-                        
-                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowGroupMenuModal(false)}>
-                            Cancel
-                        </Text>
+                        <View style={[GlobalStyles.menu_divider, { backgroundColor: colors.border }]} />
 
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowGroupMenuModal(false)}>Cancel</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
 
-            {/*************************** Edit Group Modal (remove members) *******************************/}
+            {/*************************** Edit Group Modal *******************************/}
             <Modal visible={showEditGroupModal} transparent animationType="slide">
                 <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowEditGroupModal(false)}>
-                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
-                        <Text style={GlobalStyles.modal_title}>{editingGroup?.name}</Text>
-                        <Text style={GlobalStyles.group_picker_label}>Tap a member to remove them</Text>
+                    <TouchableOpacity style={[GlobalStyles.modal_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.modal_title, { color: colors.text }]}>{editingGroup?.name}</Text>
+                        <Text style={[GlobalStyles.group_picker_label, { color: colors.text }]}>Tap a member to remove them</Text>
 
                         {editingGroup?.memberIds.length === 0 && (
-                            <Text style={{ color: '#888', textAlign: 'center', marginVertical: 12 }}>No members in this group.</Text>
+                            <Text style={{ color: colors.text, opacity: 0.5, textAlign: 'center', marginVertical: 12 }}>No members in this group.</Text>
                         )}
 
                         {editingGroup?.memberIds.map(memberId => {
@@ -386,82 +315,75 @@ export default function SocialScreen() {
                             return (
                                 <TouchableOpacity
                                     key={memberId}
-                                    style={GlobalStyles.remove_member_row}
+                                    style={[GlobalStyles.remove_member_row, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}
                                     onPress={() => {
                                         removeMemberFromGroup(editingGroup.id, memberId);
-                                        // Update the local editingGroup state so the list updates instantly
                                         setEditingGroup(prev => prev
                                             ? { ...prev, memberIds: prev.memberIds.filter(id => id !== memberId) }
                                             : prev
                                         );
                                     }}
                                 >
-                                    <Text style={GlobalStyles.remove_member_name}>{contact.name}</Text>
+                                    <Text style={[GlobalStyles.remove_member_name, { color: colors.text }]}>{contact.name}</Text>
                                     <Text style={GlobalStyles.remove_member_x}>✕</Text>
                                 </TouchableOpacity>
                             );
                         })}
 
-                        <TouchableOpacity style={[GlobalStyles.modal_button, { marginTop: 16 }]} onPress={() => setShowEditGroupModal(false)}>
-                            <Text style={GlobalStyles.modal_button_text}>Done</Text>
+                        <TouchableOpacity style={[GlobalStyles.modal_button, { backgroundColor: colors.accent, borderColor: colors.border, marginTop: 16 }]} onPress={() => setShowEditGroupModal(false)}>
+                            <Text style={[GlobalStyles.modal_button_text, { color: colors.text }]}>Done</Text>
                         </TouchableOpacity>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
 
             {/*************************** Tab Switcher *******************************/}
-            <View style={GlobalStyles.tab_switcher}>
+            <View style={[GlobalStyles.tab_switcher, { borderColor: colors.border }]}>
                 <TouchableOpacity
-                    style={[GlobalStyles.tab_btn, activeTab === 'contacts' && GlobalStyles.tab_btn_active]}
+                    style={[GlobalStyles.tab_btn, { backgroundColor: colors.background }, activeTab === 'contacts' && { backgroundColor: colors.tabActive }]}
                     onPress={() => { setActiveTab('contacts'); setSearchText(''); }}
                 >
-                    <Text style={GlobalStyles.tab_btn_text}>Contacts</Text>
+                    <Text style={[GlobalStyles.tab_btn_text, { color: colors.text }]}>Contacts</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[GlobalStyles.tab_btn, activeTab === 'groups' && GlobalStyles.tab_btn_active]}
+                    style={[GlobalStyles.tab_btn, { backgroundColor: colors.background }, activeTab === 'groups' && { backgroundColor: colors.tabActive }]}
                     onPress={() => { setActiveTab('groups'); setSearchText(''); }}
                 >
-                    <Text style={GlobalStyles.tab_btn_text}>Groups</Text>
+                    <Text style={[GlobalStyles.tab_btn_text, { color: colors.text }]}>Groups</Text>
                 </TouchableOpacity>
             </View>
 
-            {/*********************** Search Bar ***********************/}
-            <View style={GlobalStyles.search_body}>
+            {/*************************** Search Bar *******************************/}
+            <View style={[GlobalStyles.search_body, { backgroundColor: colors.tabActive }]}>
                 <Text style={GlobalStyles.magnif_icon}>🔍</Text>
-                <TextInput style={GlobalStyles.search_box}
-                placeholder={activeTab === 'contacts' ? 'Search Contacts' : 'Search Groups'}
-                placeholderTextColor="white"
-                value={searchText}
-                onChangeText={setSearchText}
+                <TextInput
+                    style={[GlobalStyles.search_box, { backgroundColor: colors.card, color: colors.text }]}
+                    placeholder={activeTab === 'contacts' ? 'Search Contacts' : 'Search Groups'}
+                    placeholderTextColor={colors.border}
+                    value={searchText}
+                    onChangeText={setSearchText}
                 />
             </View>
-            
+
             {/*************************** Contacts Tab *******************************/}
             {activeTab === 'contacts' && (
-                <View style={GlobalStyles.contacts_body}>
+                <View style={[GlobalStyles.contacts_body, { backgroundColor: colors.tabActive }]}>
                     <FlatList
                         data={filteredContacts}
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
-                            <View style={GlobalStyles.contact}>
+                            <View style={[GlobalStyles.contact, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                 <View>
-                                    <Text style={GlobalStyles.contact_name}>{item.name}</Text>
-                                    <Text style={GlobalStyles.contact_name}>{item.phone}</Text>
-                                    <Text style={GlobalStyles.contact_name}>{item.email}</Text>
+                                    <Text style={[GlobalStyles.contact_name, { color: colors.text }]}>{item.name}</Text>
+                                    <Text style={[GlobalStyles.contact_name, { color: colors.text, opacity: 0.6 }]}>{item.phone}</Text>
+                                    <Text style={[GlobalStyles.contact_name, { color: colors.text, opacity: 0.6 }]}>{item.email}</Text>
                                 </View>
                                 <View style={{ flexDirection: 'row' }}>
-                                    <TouchableOpacity
-                                        onPress={() =>
-                                            router.push({
-                                                pathname: "./chat",
-                                                params: { name: item.name },
-                                            })
-                                        }
-                                                        >
-                                        <Text style={GlobalStyles.menu_icon}>💬</Text>
+                                    <TouchableOpacity onPress={() => router.push({ pathname: "./chat", params: { name: item.name } })}>
+                                        <Text style={[GlobalStyles.menu_icon, { color: colors.text }]}>💬</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => openContactMenu(item)}>
-                                        <Text style={GlobalStyles.menu_icon}>⋮</Text>
+                                        <Text style={[GlobalStyles.menu_icon, { color: colors.text }]}>⋮</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -472,9 +394,11 @@ export default function SocialScreen() {
 
             {/*************************** Groups Tab *******************************/}
             {activeTab === 'groups' && (
-                <View style={GlobalStyles.contacts_body}>
+                <View style={[GlobalStyles.contacts_body, { backgroundColor: colors.tabActive }]}>
                     {filteredGroups.length === 0 ? (
-                        <Text style={GlobalStyles.empty_text}>No groups yet. Add a contact to a group to get started.</Text>
+                        <Text style={[GlobalStyles.empty_text, { color: colors.text, opacity: 0.5 }]}>
+                            No groups yet. Add a contact to a group to get started.
+                        </Text>
                     ) : (
                         <FlatList
                             data={filteredGroups}
@@ -486,24 +410,21 @@ export default function SocialScreen() {
                                     .filter(Boolean) as Contact[];
 
                                 return (
-                                    <View style={GlobalStyles.contact}>
+                                    <View style={[GlobalStyles.contact, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                         <View style={{ flex: 1 }}>
-
-                                            {/* Tapping the group name/count toggles the member dropdown */}
                                             <TouchableOpacity onPress={() => toggleGroupExpand(item.id)}>
-                                                <Text style={GlobalStyles.contact_name}>{item.name}</Text>
-                                                <Text style={GlobalStyles.group_member_count}>
+                                                <Text style={[GlobalStyles.contact_name, { color: colors.text }]}>{item.name}</Text>
+                                                <Text style={[GlobalStyles.group_member_count, { color: colors.text, opacity: 0.6 }]}>
                                                     {item.memberIds.length} {item.memberIds.length === 1 ? 'member' : 'members'}  {isExpanded ? '▲' : '▼'}
                                                 </Text>
                                             </TouchableOpacity>
 
-                                            {/* Dropdown — only visible when this group is expanded */}
                                             {isExpanded && (
-                                                <ScrollView style={GlobalStyles.member_dropdown} nestedScrollEnabled>
+                                                <ScrollView style={[GlobalStyles.member_dropdown, { backgroundColor: colors.background }]} nestedScrollEnabled>
                                                     {members.length === 0
-                                                        ? <Text style={GlobalStyles.empty_text}>No members.</Text>
+                                                        ? <Text style={[GlobalStyles.empty_text, { color: colors.text, opacity: 0.5 }]}>No members.</Text>
                                                         : members.map(member => (
-                                                            <Text key={member.id} style={GlobalStyles.member_row}>
+                                                            <Text key={member.id} style={[GlobalStyles.member_row, { color: colors.text }]}>
                                                                 • {member.name}
                                                             </Text>
                                                         ))
@@ -513,17 +434,11 @@ export default function SocialScreen() {
                                         </View>
 
                                         <View style={{ flexDirection: 'row' }}>
-                                            <TouchableOpacity
-                                                onPress={() =>
-                                                router.push({
-                                                    pathname: "./chat",
-                                                    params: { name: item.name },
-                                                })
-                                            }>
-                                                <Text style={GlobalStyles.menu_icon}>💬</Text>
+                                            <TouchableOpacity onPress={() => router.push({ pathname: "./chat", params: { name: item.name } })}>
+                                                <Text style={[GlobalStyles.menu_icon, { color: colors.text }]}>💬</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity onPress={() => openGroupMenu(item)}>
-                                                <Text style={GlobalStyles.menu_icon}>⋮</Text>
+                                                <Text style={[GlobalStyles.menu_icon, { color: colors.text }]}>⋮</Text>
                                             </TouchableOpacity>
                                         </View>
                                     </View>
@@ -534,15 +449,18 @@ export default function SocialScreen() {
                 </View>
             )}
 
-            <View style={GlobalStyles.buttons}> 
-                <View style={GlobalStyles.addContact_button_body}>
-                    <TouchableOpacity onPress={() => setOpenModal(true)}>
-                        <Text style={GlobalStyles.addContact_button}>➕ Add Contact</Text>
-                    </TouchableOpacity>
-                </View>
+            {/*************************** Bottom Button *******************************/}
+            <View style={GlobalStyles.buttons}>
+                {activeTab === 'contacts' && (
+                    <View style={[GlobalStyles.addContact_button_body, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                        <TouchableOpacity onPress={() => setOpenModal(true)}>
+                            <Text style={[GlobalStyles.addContact_button, { color: colors.text }]}>➕ Add Contact</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
+
         </View>
-        
     );
 
   /* ⋮  Menu Icon just in case */
