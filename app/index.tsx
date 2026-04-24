@@ -932,7 +932,6 @@ function HomeScreen() {
               },
             ]}
             onPress={() => {
-              setActiveTab("social");
               router.push("/social");
             }}
           >
