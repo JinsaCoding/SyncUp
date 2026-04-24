@@ -1,85 +1,36 @@
-import { useRouter } from "expo-router";
-import React, { createContext, useContext, useState } from "react";
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
     FlatList,
     Modal,
-    StyleSheet,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlobalThemes } from "./styles";
-
-type Contact = {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-};
-
-type ContactsContextType = {
-  contacts: Contact[];
-  addContact: (contact: Omit<Contact, "id">) => void;
-  deleteContact: (id: string) => void;
-  editContact: (id: string, updated: Omit<Contact, "id">) => void;
-};
-
-const ContactsContext = createContext<ContactsContextType | null>(null);
-
-export function ContactsProvider({ children }: { children: React.ReactNode }) {
-  const [contacts, setContacts] = useState<Contact[]>([
-    {
-      id: "1",
-      name: "Alice Smith",
-      phone: "555-1234",
-      email: "alice@email.com",
-    },
-    { id: "2", name: "Bob Jones", phone: "555-5678", email: "bob@email.com" },
-    { id: "3", name: "Clara Lee", phone: "555-9012", email: "clara@email.com" },
-    {
-      id: "4",
-      name: "David Martinez",
-      phone: "555-3456",
-      email: "david@email.com",
-    },
-  ]);
-
-  const addContact = (contact: Omit<Contact, "id">) => {
-    setContacts((prev) => [...prev, { ...contact, id: Date.now().toString() }]);
-  };
-
-  const deleteContact = (id: string) => {
-    setContacts((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const editContact = (id: string, updated: Omit<Contact, "id">) => {
-    setContacts((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updated } : c)),
-    );
-  };
-
-  return (
-    <ContactsContext.Provider
-      value={{ contacts, addContact, deleteContact, editContact }}
-    >
-      {children}
-    </ContactsContext.Provider>
-  );
-}
-
-export function useContacts() {
-  const context = useContext(ContactsContext);
-  if (!context) {
-    throw new Error("useContacts must be used within a ContactsProvider");
-  }
-  return context;
-}
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Contact, Group } from './context/ContactContext';
+import { useContacts } from './context/ContactContext';
+import { GlobalStyles, GlobalThemes } from "./styles";
 
 export default function SocialScreen() {
-  const { contacts, addContact, editContact } = useContacts();
-  const router = useRouter();
+    const { contacts,
+        addContact,
+        editContact,
+        deleteContact,
+        groups,
+        addGroup,
+        deleteGroup,
+        addToGroup,
+        removeMemberFromGroup
+    } = useContacts();
+
+    const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const colors = GlobalThemes['dark'];
+
+    const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -96,24 +47,93 @@ export default function SocialScreen() {
 
   const [searchText, setSearchText] = useState("");
 
-  const insets = useSafeAreaInsets();
-  const colors = GlobalThemes["dark"];
+    const [menuContact, setMenuContact] = useState<Contact | null>(null);
+    const [showMenuModal, setShowMenuModal] = useState(false);
 
-  // Filter contacts based on search text either matching name, phone, or email
-  const fileredContacts = contacts.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      c.phone.includes(searchText) ||
-      c.email.toLowerCase().includes(searchText.toLowerCase()),
-  );
+    /*********************** Grouped Contacts ***********************/
+    const [showGroupPickerModal, setShowGroupPickerModal] = useState(false);
+    const [newGroupName, setNewGroupName] = useState('');
 
-  function openEditModal(contact: Contact) {
-    setEditingContact(contact);
-    setEditedName(contact.name);
-    setEditedPhone(contact.phone);
-    setEditedEmail(contact.email);
-    setShowEditModal(true);
-  }
+    const [menuGroup, setMenuGroup] = useState<Group | null>(null);
+    const [showGroupMenuModal, setShowGroupMenuModal] = useState(false);
+
+
+    const [showEditGroupModal, setShowEditGroupModal] = useState(false);
+    const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+
+    // Tracks which group id is currently expanded to show members
+    const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
+
+    function openGroupPicker() {
+        setShowMenuModal(false); // close the contact 3-dot menu
+        setNewGroupName('');
+        setShowGroupPickerModal(true);
+    }
+
+    function handleAddToExistingGroup(groupId: string) {
+        if (!menuContact) return;
+        addToGroup(groupId, menuContact.id);
+        setShowGroupPickerModal(false);
+    }
+
+    function handleCreateNewGroup() {
+        if (!newGroupName.trim() || !menuContact) return;
+        addGroup(newGroupName.trim(), [menuContact.id]);
+        setNewGroupName('');
+        setShowGroupPickerModal(false);
+    }
+    
+    const filteredGroups = groups.filter(g =>
+        g.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    function openGroupMenu(group: Group) {
+        setMenuGroup(group);
+        setShowGroupMenuModal(true);
+    }
+
+    function openEditGroupModal(group: Group) {
+        setEditingGroup(group);
+        setShowGroupMenuModal(false);
+        setShowEditGroupModal(true);
+    }
+
+    function handleDeleteGroup() {
+        if (!menuGroup) return;
+        deleteGroup(menuGroup.id);
+        setShowGroupMenuModal(false);
+    }
+
+    function toggleGroupExpand(groupId: string) {
+        setExpandedGroupId(prev => prev === groupId ? null : groupId);
+    }
+
+    /***************************************************************/
+
+    /*********************** Single Contacts ***********************/
+
+
+    function openContactMenu(contact: Contact) {
+        setMenuContact(contact);
+        setShowMenuModal(true);
+    }
+
+    function openEditContactModal(contact: Contact) {
+        setEditingContact(contact);
+        setEditedName(contact.name);
+        setEditedPhone(contact.phone);
+        setEditedEmail(contact.email);
+        setShowMenuModal(false);
+        setShowEditModal(true);
+    }
+
+    // Filter contacts based on search text either matching name, phone, or email
+    const filteredContacts = contacts.filter(c =>
+        c.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        c.phone.includes(searchText) ||
+        c.email.toLowerCase().includes(searchText.toLowerCase())
+    );
+
 
   function handleAddContact() {
     if (!newName.trim()) {
@@ -122,11 +142,17 @@ export default function SocialScreen() {
 
     addContact({ name: newName, phone: newPhone, email: newEmail });
 
-    setNewName("");
-    setNewPhone("");
-    setNewEmail("");
-    setOpenModal(false);
-  }
+        setNewName('');
+        setNewPhone('');
+        setNewEmail('');
+        setOpenModal(false);
+    }
+
+    function handleDelete() {
+        if (!menuContact) return;
+        deleteContact(menuContact.id);
+        setShowMenuModal(false);
+    }
 
   function handleEditContact() {
     if (!editingContact || !editedName.trim()) {
@@ -139,292 +165,358 @@ export default function SocialScreen() {
       email: editedEmail,
     });
 
-    setShowEditModal(false);
-  }
+        setShowEditModal(false);
+    }
+
+    /***************************************************************/
+
 
   /* ➕ */
 
-  return (
-    <View
-      style={[
-        styles.body,
-        { paddingBottom: insets.bottom },
-        { backgroundColor: colors.background },
-      ]}
-    >
-      {/* <Text style={styles.header_text}>
-                Work In Progress!
-            </Text>
-            <View style={styles.header}>
-                
-            </View> */}
+    return (
+        <View style={[GlobalStyles.social_page_body, { paddingBottom: insets.bottom }]}>
 
-      {/* <View style={styles.modal_container}> */}
-      {/*************************** Add Contact Modal *******************************/}
-      <Modal visible={openModal} transparent={true} animationType="slide">
-        <TouchableOpacity
-          style={styles.modal_content}
-          onPress={() => setOpenModal(false)}
-        >
-          <TouchableOpacity style={styles.modal_card} activeOpacity={1}>
-            <Text style={styles.modal_title}>Add Contact</Text>
 
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Name"
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Phone"
-              value={newPhone}
-              onChangeText={setNewPhone}
-            />
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Email"
-              value={newEmail}
-              onChangeText={setNewEmail}
-            />
-            <TouchableOpacity
-              style={styles.modal_button}
-              onPress={handleAddContact}
-            >
-              <Text style={styles.modal_button_text}>Add Contact</Text>
-            </TouchableOpacity>
-            <Text
-              style={styles.modal_cancel}
-              onPress={() => setOpenModal(false)}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-      {/*************************** Edit Contact Modal *******************************/}
-      <Modal visible={showEditModal} transparent={true} animationType="slide">
-        <TouchableOpacity
-          style={styles.modal_content}
-          onPress={() => setShowEditModal(false)}
-        >
-          <TouchableOpacity style={styles.modal_card} activeOpacity={1}>
-            <Text style={styles.modal_title}>Edit Contact</Text>
+            {/*************************** Add Contact Modal *******************************/}
+            <Modal visible={openModal} transparent={true} animationType="slide">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setOpenModal(false)}>
 
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Name"
-              value={editedName}
-              onChangeText={setEditedName}
-            />
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Phone"
-              value={editedPhone}
-              onChangeText={setEditedPhone}
-            />
-            <TextInput
-              style={styles.modal_input}
-              placeholder="Email"
-              value={editedEmail}
-              onChangeText={setEditedEmail}
-            />
-            <TouchableOpacity
-              style={styles.modal_button}
-              onPress={handleEditContact}
-            >
-              <Text style={styles.modal_button_text}>Save Changes</Text>
-            </TouchableOpacity>
-            <Text
-              style={styles.modal_cancel}
-              onPress={() => setShowEditModal(false)}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-      {/*********************** Search Bar ***********************/}
-      <View style={styles.search_body}>
-        <Text style={styles.magnif_icon}>🔍</Text>
-        <TextInput
-          style={styles.search_box}
-          placeholder="Search Contacts"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
-      {/********************* Contact List ***********************/}
-      <View style={styles.contacts_body}>
-        <FlatList
-          data={fileredContacts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => {
-            return (
-              <View style={styles.contact}>
-                <View>
-                  <Text>{item.name}</Text>
-                  <Text>{item.phone}</Text>
-                  <Text>{item.email}</Text>
+                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>0
+                        <Text style={GlobalStyles.modal_title}>Add Contact</Text>
+
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Name"
+                            value={newName}
+                            onChangeText={setNewName}
+                        />
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Phone"
+                            value={newPhone}
+                            onChangeText={setNewPhone}
+                        />
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Email"
+                            value={newEmail}
+                            onChangeText={setNewEmail}
+                        />
+                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleAddContact}>
+                            <Text style={GlobalStyles.modal_button_text}>Add Contact</Text>
+                        </TouchableOpacity>
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setOpenModal(false)}>
+                            Cancel
+                        </Text>
+                    </TouchableOpacity>
+                    
+                </TouchableOpacity>
+            </Modal>
+            
+            {/*************************** Edit Contact Modal *******************************/}
+            <Modal visible={showEditModal} transparent={true} animationType="slide">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowEditModal(false)}>
+                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
+                        <Text style={GlobalStyles.modal_title}>Edit Contact</Text>
+
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Name"
+                            value={editedName}
+                            onChangeText={setEditedName}
+                        />
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Phone"
+                            value={editedPhone}
+                            onChangeText={setEditedPhone}
+                        />
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Email"
+                            value={editedEmail}
+                            onChangeText={setEditedEmail}
+                        />
+                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleEditContact}>
+                            <Text style={GlobalStyles.modal_button_text}>Save Changes</Text>
+                        </TouchableOpacity>
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowEditModal(false)}>
+                            Cancel
+                        </Text>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
+            {/********************************* 3-Dot Contact Menu *********************************/}
+            <Modal visible={showMenuModal} transparent animationType="fade">
+                {/* Tap outside the menu card to close it */}
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowMenuModal(false)}>
+                    <TouchableOpacity style={GlobalStyles.menu_card} activeOpacity={1}>
+
+                        {/* Shows the contact's name at the top so the user knows who they're acting on */}
+                        <Text style={GlobalStyles.menu_contact_name}>{menuContact?.name}</Text>
+                        {/* Edit Contact */}
+                        <TouchableOpacity
+                            style={GlobalStyles.menu_option}
+                            onPress={() => menuContact && openEditContactModal(menuContact)}
+                        >
+                            <Text style={GlobalStyles.menu_option_text}>✏️  Edit</Text>
+                        </TouchableOpacity>
+                        <View style={GlobalStyles.menu_divider} />
+
+                        {/* Add to Group */}
+                        <TouchableOpacity style={GlobalStyles.menu_option} onPress={openGroupPicker}>
+                            <Text style={GlobalStyles.menu_option_text}>👥  Add to Group</Text>
+                        </TouchableOpacity>
+                        <View style={GlobalStyles.menu_divider} />
+
+                        {/* Delete Contact */}
+                        <TouchableOpacity
+                            style={GlobalStyles.menu_option}
+                            onPress={handleDelete}
+                        >
+                            <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Remove</Text>
+                        </TouchableOpacity>
+
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
+            {/*************************** Group Picker Modal *******************************/}
+            <Modal visible={showGroupPickerModal} transparent animationType="slide">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowGroupPickerModal(false)}>
+                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
+                        <Text style={GlobalStyles.modal_title}>Add to Group</Text>
+
+                        {/* Create a brand new group */}
+                        <Text style={GlobalStyles.group_picker_label}>Create new group</Text>
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Group name"
+                            placeholderTextColor="#888"
+                            value={newGroupName}
+                            onChangeText={setNewGroupName}
+                        />
+                        <TouchableOpacity style={GlobalStyles.modal_button} onPress={handleCreateNewGroup}>
+                            <Text style={GlobalStyles.modal_button_text}>Create & Add</Text>
+                        </TouchableOpacity>
+
+                        {/* Or pick an existing group */}
+                        {groups.length > 0 && (
+                            <>
+                                <Text style={[GlobalStyles.group_picker_label, { marginTop: 16 }]}>Add to existing group</Text>
+                                {groups.map(g => (
+                                    <TouchableOpacity
+                                        key={g.id}
+                                        style={GlobalStyles.group_picker_row}
+                                        onPress={() => handleAddToExistingGroup(g.id)}
+                                    >
+                                        <Text style={GlobalStyles.group_picker_row_text}>{g.name}</Text>
+                                        <Text style={GlobalStyles.group_picker_count}>{g.memberIds.length} members</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </>
+                        )}
+
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowGroupPickerModal(false)}>Cancel</Text>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
+            {/*************************** Group 3-Dot Menu *******************************/}
+            <Modal visible={showGroupMenuModal} transparent animationType="fade">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowGroupMenuModal(false)}>
+                    <TouchableOpacity style={GlobalStyles.menu_card} activeOpacity={1}>
+                        <Text style={GlobalStyles.menu_contact_name}>{menuGroup?.name}</Text>
+                        <View style={GlobalStyles.menu_divider} />
+
+                        <TouchableOpacity style={GlobalStyles.menu_option} onPress={() => menuGroup && openEditGroupModal(menuGroup)}>
+                            <Text style={GlobalStyles.menu_option_text}>✏️  Edit Members</Text>
+                        </TouchableOpacity>
+                        <View style={GlobalStyles.menu_divider} />
+
+                        <TouchableOpacity style={GlobalStyles.menu_option} onPress={handleDeleteGroup}>
+                            <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Delete Group</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
+            {/*************************** Edit Group Modal (remove members) *******************************/}
+            <Modal visible={showEditGroupModal} transparent animationType="slide">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowEditGroupModal(false)}>
+                    <TouchableOpacity style={GlobalStyles.modal_card} activeOpacity={1}>
+                        <Text style={GlobalStyles.modal_title}>{editingGroup?.name}</Text>
+                        <Text style={GlobalStyles.group_picker_label}>Tap a member to remove them</Text>
+
+                        {editingGroup?.memberIds.length === 0 && (
+                            <Text style={{ color: '#888', textAlign: 'center', marginVertical: 12 }}>No members in this group.</Text>
+                        )}
+
+                        {editingGroup?.memberIds.map(memberId => {
+                            const contact = contacts.find(c => c.id === memberId);
+                            if (!contact) return null;
+                            return (
+                                <TouchableOpacity
+                                    key={memberId}
+                                    style={GlobalStyles.remove_member_row}
+                                    onPress={() => {
+                                        removeMemberFromGroup(editingGroup.id, memberId);
+                                        // Update the local editingGroup state so the list updates instantly
+                                        setEditingGroup(prev => prev
+                                            ? { ...prev, memberIds: prev.memberIds.filter(id => id !== memberId) }
+                                            : prev
+                                        );
+                                    }}
+                                >
+                                    <Text style={GlobalStyles.remove_member_name}>{contact.name}</Text>
+                                    <Text style={GlobalStyles.remove_member_x}>✕</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+
+                        <TouchableOpacity style={[GlobalStyles.modal_button, { marginTop: 16 }]} onPress={() => setShowEditGroupModal(false)}>
+                            <Text style={GlobalStyles.modal_button_text}>Done</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
+            {/*************************** Tab Switcher *******************************/}
+            <View style={GlobalStyles.tab_switcher}>
+                <TouchableOpacity
+                    style={[GlobalStyles.tab_btn, activeTab === 'contacts' && GlobalStyles.tab_btn_active]}
+                    onPress={() => { setActiveTab('contacts'); setSearchText(''); }}
+                >
+                    <Text style={GlobalStyles.tab_btn_text}>Contacts</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[GlobalStyles.tab_btn, activeTab === 'groups' && GlobalStyles.tab_btn_active]}
+                    onPress={() => { setActiveTab('groups'); setSearchText(''); }}
+                >
+                    <Text style={GlobalStyles.tab_btn_text}>Groups</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/*********************** Search Bar ***********************/}
+            <View style={GlobalStyles.search_body}>
+                <Text style={GlobalStyles.magnif_icon}>🔍</Text>
+                <TextInput style={GlobalStyles.search_box}
+                placeholder={activeTab === 'contacts' ? 'Search Contacts' : 'Search Groups'}
+                placeholderTextColor="white"
+                value={searchText}
+                onChangeText={setSearchText}
+                />
+            </View>
+            
+            {/*************************** Contacts Tab *******************************/}
+            {activeTab === 'contacts' && (
+                <View style={GlobalStyles.contacts_body}>
+                    <FlatList
+                        data={filteredContacts}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item }) => (
+                            <View style={GlobalStyles.contact}>
+                                <View>
+                                    <Text style={GlobalStyles.contact_name}>{item.name}</Text>
+                                    <Text style={GlobalStyles.contact_name}>{item.phone}</Text>
+                                    <Text style={GlobalStyles.contact_name}>{item.email}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            router.push({
+                                                pathname: "./chat",
+                                                params: { name: item.name },
+                                            })
+                                        }
+                                                        >
+                                        <Text style={GlobalStyles.menu_icon}>💬</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => openContactMenu(item)}>
+                                        <Text style={GlobalStyles.menu_icon}>⋮</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
+                    />
                 </View>
-                {/* <Text style={styles.menu_icon}>💬</Text> */}
+            )}
 
-                <View style={{ flexDirection: "row" }}>
-                  <TouchableOpacity onPress={() => openEditModal(item)}>
-                    <Text style={styles.menu_icon}>✏️</Text>
-                  </TouchableOpacity>
-                  {/* Should open a new screen for text messages */}
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/chat",
-                        params: { name: item.name },
-                      })
-                    }
-                  >
-                    <Text style={styles.menu_icon}>💬</Text>
-                  </TouchableOpacity>
+            {/*************************** Groups Tab *******************************/}
+            {activeTab === 'groups' && (
+                <View style={GlobalStyles.contacts_body}>
+                    {filteredGroups.length === 0 ? (
+                        <Text style={GlobalStyles.empty_text}>No groups yet. Add a contact to a group to get started.</Text>
+                    ) : (
+                        <FlatList
+                            data={filteredGroups}
+                            keyExtractor={item => item.id}
+                            renderItem={({ item }) => {
+                                const isExpanded = expandedGroupId === item.id;
+                                const members = item.memberIds
+                                    .map(id => contacts.find(c => c.id === id))
+                                    .filter(Boolean) as Contact[];
+
+                                return (
+                                    <View style={GlobalStyles.contact}>
+                                        <View style={{ flex: 1 }}>
+
+                                            {/* Tapping the group name/count toggles the member dropdown */}
+                                            <TouchableOpacity onPress={() => toggleGroupExpand(item.id)}>
+                                                <Text style={GlobalStyles.contact_name}>{item.name}</Text>
+                                                <Text style={GlobalStyles.group_member_count}>
+                                                    {item.memberIds.length} {item.memberIds.length === 1 ? 'member' : 'members'}  {isExpanded ? '▲' : '▼'}
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            {/* Dropdown — only visible when this group is expanded */}
+                                            {isExpanded && (
+                                                <ScrollView style={GlobalStyles.member_dropdown} nestedScrollEnabled>
+                                                    {members.length === 0
+                                                        ? <Text style={GlobalStyles.empty_text}>No members.</Text>
+                                                        : members.map(member => (
+                                                            <Text key={member.id} style={GlobalStyles.member_row}>
+                                                                • {member.name}
+                                                            </Text>
+                                                        ))
+                                                    }
+                                                </ScrollView>
+                                            )}
+                                        </View>
+
+                                        <View style={{ flexDirection: 'row' }}>
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                router.push({
+                                                    pathname: "./chat",
+                                                    params: { name: item.name },
+                                                })
+                                            }>
+                                                <Text style={GlobalStyles.menu_icon}>💬</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => openGroupMenu(item)}>
+                                                <Text style={GlobalStyles.menu_icon}>⋮</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                );
+                            }}
+                        />
+                    )}
                 </View>
-              </View>
-            );
-          }}
-        />
-      </View>
+            )}
 
-      <View style={styles.buttons}>
-        <View
-          style={{
-            backgroundColor: "lightgrey",
-            padding: 10,
-            borderRadius: 10,
-          }}
-        >
-          <TouchableOpacity onPress={() => setOpenModal(true)}>
-            <Text style={{ fontSize: 18 }}>➕ Add Contact</Text>
-          </TouchableOpacity>
+            <View style={GlobalStyles.buttons}> 
+                <View style={GlobalStyles.addContact_button_body}>
+                    <TouchableOpacity onPress={() => setOpenModal(true)}>
+                        <Text style={GlobalStyles.addContact_button}>➕ Add Contact</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
-        {/* <TouchableOpacity>
-                    <Text style={{fontSize: 18, color: 'blue'}}>✏️ Edit Contact</Text>
-                </TouchableOpacity> */}
-      </View>
-    </View>
-  );
+        
+    );
 
   /* ⋮  Menu Icon just in case */
 }
-// All styles as of now are just for testing... I am no where near done
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: "lightgrey",
-    margin: 5,
-  },
-
-  search_body: {
-    marginTop: 10,
-    marginRight: 10,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  magnif_icon: {
-    fontSize: 18,
-    margin: 8,
-  },
-
-  search_box: {
-    flex: 1,
-    flexShrink: 1,
-    backgroundColor: "grey",
-  },
-
-  header_text: {
-    flex: 2,
-    fontSize: 24,
-  },
-
-  contacts_body: {
-    margin: 10,
-    backgroundColor: "grey",
-    height: "80%",
-  },
-
-  contact: {
-    backgroundColor: "darkgrey",
-    margin: 5,
-    padding: 10,
-    borderRadius: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  menu_icon: {
-    fontSize: 32,
-    margin: 8,
-  },
-
-  buttons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    margin: 10,
-  },
-
-  body: {
-    backgroundColor: "beige",
-    height: "100%",
-  },
-
-  modal_container: {
-    flex: 1,
-    backgroundColor: "grey",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  modal_content: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  modal_card: {
-    width: "90%",
-    padding: 20,
-    backgroundColor: "lightgrey",
-    borderRadius: 10,
-  },
-
-  modal_title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  modal_input: {
-    backgroundColor: "white",
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 15,
-  },
-
-  modal_button: {
-    backgroundColor: "gray",
-    borderRadius: 6,
-    padding: 12,
-    alignItems: "center",
-    marginTop: 4,
-    marginBottom: 10,
-  },
-  modal_button_text: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  modal_cancel: {
-    color: "red",
-    textAlign: "center",
-    fontSize: 15,
-    marginTop: 4,
-  },
-});

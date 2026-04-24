@@ -291,4 +291,264 @@ export const GlobalStyles = StyleSheet.create({
     fontSize: 13,
   },
 
+  /* Social Page Styling */
+  social_page_body: {
+      backgroundColor: "#1a1a1a",
+      height: "100%"
+  },
+
+    tab_switcher: {
+      flexDirection: 'row',
+      margin: 10,
+      marginBottom: 4,
+      borderRadius: 10,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: '#333333',
+  },
+  tab_btn: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      backgroundColor: '#1a1a1a',
+  },
+  tab_btn_active: {
+      backgroundColor: '#333333',
+  },
+  tab_btn_text: {
+      color: '#f0f0f0',
+      fontSize: 15,
+      fontWeight: '500',
+  },
+
+  search_body: {
+      marginTop: 10,
+      marginRight: 10,
+      marginLeft: 10,
+      padding: 5,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#333333',
+      borderRadius: 10,
+  },
+
+  magnif_icon: {
+      fontSize: 22,
+      margin: 8,
+  },
+
+  search_box: {
+      flex: 1,
+      flexShrink: 1,
+      backgroundColor: "#555555",
+      color: 'white',
+      borderRadius: 10,
+  },
+
+  contacts_body: {
+      margin: 10,
+      backgroundColor: "#333333",
+      height: "70%",
+      borderRadius: 10,
+  },
+
+  contact: {
+      backgroundColor: "#555555",
+      margin: 5,
+      padding: 10,
+      borderRadius: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+  },
+
+  contact_name: {
+      color: '#f0f0f0',
+  },
+
+  group_member_count: {
+      color: '#aaa',
+      fontSize: 12,
+      marginTop: 3,
+  },
+  member_dropdown: {
+      marginTop: 8,
+      maxHeight: 120,         // limits height so it scrolls rather than pushing everything down
+      backgroundColor: '#444',
+      borderRadius: 6,
+      padding: 6,
+  },
+  member_row: {
+      color: '#f0f0f0',
+      paddingVertical: 4,
+      fontSize: 13,
+  },
+  empty_text: {
+      color: '#888',
+      textAlign: 'center',
+      marginTop: 20,
+      fontSize: 13,
+  },
+
+
+  menu_icon: {
+      fontSize: 32,
+      margin: 8,
+      color: '#f0f0f0',
+  },
+
+  addContact_button_body: {
+      backgroundColor: '#1a1a1a',
+      padding: 10,
+      borderRadius: 10,
+      borderColor: '#333333',
+      borderWidth: 1.5,
+  },
+
+  addContact_button: {
+      fontSize: 18,
+      color: 'white',
+      fontWeight: '500',
+  },
+
+  buttons: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      margin: 10,
+  },
+  /*********************** Modals **************************/
+  modal_container: {
+      flex: 1,
+      backgroundColor: 'grey',
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+
+  modal_content: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+  },
+
+  modal_card: {
+      width: "90%",
+      padding: 20,
+      backgroundColor: "lightgrey",
+      borderRadius: 10,
+  },
+
+  modal_title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 10,
+  },
+
+  modal_input: {
+      backgroundColor: 'white',
+      borderRadius: 6,
+      padding: 10,
+      marginBottom: 10,
+      fontSize: 15,
+  },
+
+  modal_button: {
+      backgroundColor: 'gray',
+      borderRadius: 6,
+      padding: 12,
+      alignItems: 'center',
+      marginTop: 4,
+      marginBottom: 10,
+  },
+  modal_button_text: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '500',
+  },
+  modal_cancel: {
+      color: 'red',
+      textAlign: 'center',
+      fontSize: 15,
+      marginTop: 4,
+  },
+
+  /************** Group Picker Modal *****************/
+
+  group_picker_label: {
+      fontSize: 13,
+      color: '#444',
+      marginBottom: 6,
+      fontWeight: '500',
+  },
+  group_picker_row: {
+      backgroundColor: 'white',
+      borderRadius: 6,
+      padding: 10,
+      marginBottom: 6,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  group_picker_row_text: {
+      fontSize: 15,
+      color: '#111',
+  },
+  group_picker_count: {
+      fontSize: 16,
+      color: '#888',
+  },
+
+  /**************** Edit Group Modal (remove members) ****************/
+  remove_member_row: {
+      backgroundColor: 'white',
+      borderRadius: 6,
+      padding: 10,
+      marginBottom: 6,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  remove_member_name: {
+      fontSize: 15,
+      color: '#111',
+  },
+  remove_member_x: {
+      fontSize: 16,
+      color: 'red',
+  },
+
+  /******************* 3-Dot Menu *******************/
+  menu_card: {
+      width: '70%',
+      backgroundColor: 'lightgrey',
+      borderRadius: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 0,
+      overflow: 'hidden',
+  },
+  menu_contact_name: {
+      fontSize: 20,
+      color: '#555',
+      textAlign: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+  },
+  menu_divider: {
+      height: 0.5,
+      backgroundColor: '#bbb',
+      marginHorizontal: 0,
+  },
+  menu_option: {
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+  },
+  menu_option_text: {
+      fontSize: 16,
+      color: '#111',
+  },
+  menu_delete_text: {
+      color: 'red',
+  },
+    
+
 });

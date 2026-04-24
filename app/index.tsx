@@ -23,7 +23,7 @@ import {
 } from "react-native-safe-area-context";
 import { GlobalStyles, GlobalThemes } from "./styles";
 
-import { useContacts } from "./social";
+import { useContacts } from './context/ContactContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
