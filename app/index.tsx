@@ -23,7 +23,8 @@ import {
 } from "react-native-safe-area-context";
 import { GlobalStyles, GlobalThemes } from "./styles";
 
-import { useContacts } from "./social";
+import { useContacts } from './context/ContactContext';
+import { useTheme } from './context/ThemeContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -83,6 +84,7 @@ function AddEventForm({
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const { contacts, addContact, deleteContact } = useContacts();
+  
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("en-US", {
@@ -299,6 +301,9 @@ export default function Index() {
 
 function HomeScreen() {
   const insets = useSafeAreaInsets();
+  
+  // Get theme and colors from context
+  const { theme, setTheme, colors } = useTheme();
 
   // Stores the real calendar events pulled from the device.
   const [events, setEvents] = useState<Calendar.Event[]>([]);
@@ -312,17 +317,11 @@ function HomeScreen() {
   // Controls the settings modal.
   const [openSettings, setOpenSettings] = useState(false);
 
-  // Controls dark/light theme.
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-
   // Stores which timeline event is currently selected.
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Status message shown near the bottom of the screen.
   const [status, setStatus] = useState("");
-
-  // Pulls the correct colors from the theme object in styles.tsx.
-  const colors = GlobalThemes[theme];
 
   // Weekday labels shown at the top.
   const [selectedDay, setSelectedDay] = useState(0);
@@ -933,7 +932,6 @@ function HomeScreen() {
               },
             ]}
             onPress={() => {
-              setActiveTab("social");
               router.push("/social");
             }}
           >

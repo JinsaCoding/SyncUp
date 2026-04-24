@@ -1,14 +1,16 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    FlatList,
-    Pressable,
-    SafeAreaView,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Pressable,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { GlobalStyles, GlobalThemes } from "./styles";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from './context/ThemeContext';
+import { GlobalStyles } from "./styles";
 
 type Message = {
   id: string;
@@ -38,7 +40,10 @@ const BOT_REPLIES: Record<string, string> = {
 export default function ChatScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const router = useRouter();
-  const colors = GlobalThemes["dark"];
+  // const colors = GlobalThemes["dark"];
+  const { colors } = useTheme();
+
+  const insets = useSafeAreaInsets(); // used for avoiding overlap with top and bottom menus on phones
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -84,6 +89,7 @@ export default function ChatScreen() {
       style={[
         GlobalStyles.chatContainer,
         { backgroundColor: colors.background },
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
       {/* Header */}
