@@ -84,7 +84,6 @@ function AddEventForm({
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const { contacts, addContact, deleteContact } = useContacts();
-  
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("en-US", {
@@ -301,7 +300,7 @@ export default function Index() {
 
 function HomeScreen() {
   const insets = useSafeAreaInsets();
-  
+
   // Get theme and colors from context
   const { theme, setTheme, colors } = useTheme();
 
@@ -534,7 +533,33 @@ function HomeScreen() {
   // Handles the "Late" action.
   const handleLate = () => {
     if (!selectedEvent) return;
-    setStatus(`${selectedEvent.title} will be running 20 minutes late.`);
+
+    const totalMinutes = selectedEvent.startHour * 60 + selectedEvent.startMinute + 20;
+    const newHour = Math.floor(totalMinutes / 60);
+    const newMinute = totalMinutes % 60;
+
+    setEvents((prevEvents) =>
+      prevEvents.map((event) =>
+        String(event.id) === selectedEvent.id
+          ? {
+              ...event,
+              startDate: new Date(
+                new Date(event.startDate || new Date()).setHours(newHour, newMinute, 0, 0)
+              ),
+            }
+          : event,
+      ),
+    );
+
+    setManualEvents((prev) =>
+      prev.map((event) =>
+        event.id === selectedEvent.id
+          ? { ...event, startHour: newHour, startMinute: newMinute }
+          : event,
+      ),
+    );
+
+    setStatus(`${selectedEvent.title} start time pushed back 20 minutes.`);
     setOpenEventOptions(false);
   };
 
@@ -565,6 +590,14 @@ function HomeScreen() {
       ),
     );
 
+    setManualEvents((prev) =>
+      prev.map((event) =>
+        event.id === selectedEvent.id
+          ? { ...event, endHour: newHour, endMinute: newMinute }
+          : event,
+      ),
+    );
+
     setStatus(`${selectedEvent.title} was extended by 20 minutes.`);
     setOpenEventOptions(false);
   };
@@ -576,6 +609,10 @@ function HomeScreen() {
 
     setEvents((prevEvents) =>
       prevEvents.filter((event) => String(event.id) !== selectedEvent.id),
+    );
+
+    setManualEvents((prev) =>
+      prev.filter((event) => event.id !== selectedEvent.id),
     );
 
     setStatus(`${selectedEvent.title} was cancelled.`);
@@ -768,9 +805,24 @@ function HomeScreen() {
                 </Text>
               ) : (
                 <>
-                  <Text style={[styles.title, { color: colors.text }]}>
-                    {selectedEvent.title}
-                  </Text>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Text style={[styles.title, { color: colors.text, flex: 1 }]}>
+                      {selectedEvent.title}
+                    </Text>
+                    <Pressable
+                      onPress={() => setOpenEventOptions(true)}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        borderRadius: 6,
+                        marginLeft: 8,
+                      }}
+                    >
+                      <Text style={{ color: colors.text, fontSize: 18 }}>⋮</Text>
+                    </Pressable>
+                  </View>
 
                   <Text style={[styles.smallLabel, { color: colors.text }]}>
                     Location
