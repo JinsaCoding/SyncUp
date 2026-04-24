@@ -346,9 +346,12 @@ export const GlobalStyles = StyleSheet.create({
   },
 
   contacts_body: {
-      margin: 10,
+      marginTop: 10,
+      marginRight: 10,
+      marginLeft: 10,
+      marginBottom: 10,
       backgroundColor: "#333333",
-      height: "70%",
+      height: "65%",
       borderRadius: 10,
   },
 
@@ -466,10 +469,11 @@ export const GlobalStyles = StyleSheet.create({
       fontWeight: '500',
   },
   modal_cancel: {
+
       color: 'red',
       textAlign: 'center',
-      fontSize: 15,
-      marginTop: 4,
+      fontSize: 22,
+      marginTop: 8,
   },
 
   /************** Group Picker Modal *****************/

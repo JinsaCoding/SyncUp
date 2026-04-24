@@ -27,7 +27,7 @@ export default function SocialScreen() {
     } = useContacts();
 
     const router = useRouter();
-    const insets = useSafeAreaInsets();
+    const insets = useSafeAreaInsets(); // used for avoiding overlap with top and bottom menus on phones
     const colors = GlobalThemes['dark'];
 
     const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
@@ -174,8 +174,23 @@ export default function SocialScreen() {
   /* ➕ */
 
     return (
-        <View style={[GlobalStyles.social_page_body, { paddingBottom: insets.bottom }]}>
-
+        <View style={[GlobalStyles.social_page_body, { paddingBottom: insets.bottom, paddingTop: insets.top }]}>
+            <View
+                style={[GlobalStyles.chatHeader, { borderBottomColor: colors.border }]}
+            >
+                <TouchableOpacity
+                onPress={() => router.back()}
+                style={GlobalStyles.chatBackBtn}
+                >
+                <Text style={[GlobalStyles.chatBackText, { color: colors.text }]}>
+                    ← Back
+                </Text>
+                </TouchableOpacity>
+                <Text style={[GlobalStyles.chatHeaderTitle, { color: colors.text }]}>
+                Social
+                </Text>
+                <View style={GlobalStyles.chatBackBtn} />
+            </View>
 
             {/*************************** Add Contact Modal *******************************/}
             <Modal visible={openModal} transparent={true} animationType="slide">
@@ -278,6 +293,12 @@ export default function SocialScreen() {
                             <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Remove</Text>
                         </TouchableOpacity>
 
+                        <View style={GlobalStyles.menu_divider} />
+                        
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowMenuModal(false)}>
+                            Cancel
+                        </Text>
+
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
@@ -338,6 +359,12 @@ export default function SocialScreen() {
                         <TouchableOpacity style={GlobalStyles.menu_option} onPress={handleDeleteGroup}>
                             <Text style={[GlobalStyles.menu_option_text, GlobalStyles.menu_delete_text]}>🗑️  Delete Group</Text>
                         </TouchableOpacity>
+                        <View style={GlobalStyles.menu_divider} />
+                        
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowGroupMenuModal(false)}>
+                            Cancel
+                        </Text>
+
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>

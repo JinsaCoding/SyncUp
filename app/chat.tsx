@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlobalStyles, GlobalThemes } from "./styles";
 
 type Message = {
@@ -39,6 +40,8 @@ export default function ChatScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const router = useRouter();
   const colors = GlobalThemes["dark"];
+
+  const insets = useSafeAreaInsets(); // used for avoiding overlap with top and bottom menus on phones
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -84,6 +87,7 @@ export default function ChatScreen() {
       style={[
         GlobalStyles.chatContainer,
         { backgroundColor: colors.background },
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
       {/* Header */}
