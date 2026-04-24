@@ -502,6 +502,14 @@ export const GlobalStyles = StyleSheet.create({
       color: '#888',
   },
 
+  create_group_member_list: {
+      maxHeight: 260,
+      marginBottom: 4,
+  },
+  create_group_checkbox: {
+      fontSize: 20,
+  },
+
   /**************** Edit Group Modal (remove members) ****************/
   remove_member_row: {
       backgroundColor: 'white',

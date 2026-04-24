@@ -65,6 +65,31 @@ export default function SocialScreen() {
     // Tracks which group id is currently expanded to show members
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
 
+    // Create Group (from Groups tab)
+    const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+    const [createGroupName, setCreateGroupName] = useState('');
+    const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+
+    function openCreateGroupModal() {
+        setCreateGroupName('');
+        setSelectedContactIds([]);
+        setShowCreateGroupModal(true);
+    }
+
+    function toggleContactSelection(contactId: string) {
+        setSelectedContactIds(prev =>
+            prev.includes(contactId)
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
+        );
+    }
+
+    function handleCreateGroupFromTab() {
+        if (!createGroupName.trim() || selectedContactIds.length === 0) return;
+        addGroup(createGroupName.trim(), selectedContactIds);
+        setShowCreateGroupModal(false);
+    }
+
     function openGroupPicker() {
         setShowMenuModal(false); // close the contact 3-dot menu
         setNewGroupName('');
@@ -337,6 +362,53 @@ export default function SocialScreen() {
                 </TouchableOpacity>
             </Modal>
 
+            {/*************************** Create Group Modal *******************************/}
+            <Modal visible={showCreateGroupModal} transparent animationType="slide">
+                <TouchableOpacity style={GlobalStyles.modal_content} onPress={() => setShowCreateGroupModal(false)}>
+                    <TouchableOpacity style={[GlobalStyles.modal_card, { backgroundColor: colors.card }]} activeOpacity={1}>
+                        <Text style={[GlobalStyles.modal_title, { color: colors.text }]}>Create Group</Text>
+
+                        <TextInput
+                            style={GlobalStyles.modal_input}
+                            placeholder="Group name"
+                            placeholderTextColor="#888"
+                            value={createGroupName}
+                            onChangeText={setCreateGroupName}
+                        />
+
+                        <Text style={[GlobalStyles.group_picker_label, { color: colors.text }]}>
+                            Select members ({selectedContactIds.length} selected)
+                        </Text>
+
+                        <ScrollView style={GlobalStyles.create_group_member_list} nestedScrollEnabled>
+                            {contacts.map(c => {
+                                const selected = selectedContactIds.includes(c.id);
+                                return (
+                                    <TouchableOpacity
+                                        key={c.id}
+                                        style={[GlobalStyles.group_picker_row, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}
+                                        onPress={() => toggleContactSelection(c.id)}
+                                    >
+                                        <Text style={[GlobalStyles.group_picker_row_text, { color: colors.text }]}>{c.name}</Text>
+                                        <Text style={[GlobalStyles.create_group_checkbox, { color: colors.text }]}>
+                                            {selected ? '☑' : '☐'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            style={[GlobalStyles.modal_button, { backgroundColor: colors.accent, borderColor: colors.border, marginTop: 12, opacity: (createGroupName.trim() && selectedContactIds.length > 0) ? 1 : 0.5 }]}
+                            onPress={handleCreateGroupFromTab}
+                        >
+                            <Text style={[GlobalStyles.modal_button_text, { color: colors.text }]}>Create Group</Text>
+                        </TouchableOpacity>
+                        <Text style={GlobalStyles.modal_cancel} onPress={() => setShowCreateGroupModal(false)}>Cancel</Text>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+
             {/*************************** Tab Switcher *******************************/}
             <View style={[GlobalStyles.tab_switcher, { borderColor: colors.border }]}>
                 <TouchableOpacity
@@ -455,6 +527,13 @@ export default function SocialScreen() {
                     <View style={[GlobalStyles.addContact_button_body, { backgroundColor: colors.background, borderColor: colors.border }]}>
                         <TouchableOpacity onPress={() => setOpenModal(true)}>
                             <Text style={[GlobalStyles.addContact_button, { color: colors.text }]}>➕ Add Contact</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                {activeTab === 'groups' && (
+                    <View style={[GlobalStyles.addContact_button_body, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                        <TouchableOpacity onPress={openCreateGroupModal}>
+                            <Text style={[GlobalStyles.addContact_button, { color: colors.text }]}>➕ Create Group</Text>
                         </TouchableOpacity>
                     </View>
                 )}
