@@ -304,6 +304,8 @@ function HomeScreen() {
   // Get theme and colors from context
   const { theme, setTheme, colors } = useTheme();
 
+  const { contacts } = useContacts();
+
   // Stores the real calendar events pulled from the device.
   const [events, setEvents] = useState<Calendar.Event[]>([]);
 
@@ -316,11 +318,31 @@ function HomeScreen() {
   // Controls the settings modal.
   const [openSettings, setOpenSettings] = useState(false);
 
+  // Controls the edit event modal.
+  const [openEditEvent, setOpenEditEvent] = useState(false);
+  const [editFields, setEditFields] = useState<{
+    title: string;
+    location: string;
+    description: string;
+    startTime: Date;
+    endTime: Date;
+    showStartPicker: boolean;
+    showEndPicker: boolean;
+  } | null>(null);
+
+  // Controls the invite friends modal.
+  const [openInvite, setOpenInvite] = useState(false);
+
   // Stores which timeline event is currently selected.
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Status message shown near the bottom of the screen.
   const [status, setStatus] = useState("");
+
+  const showStatus = (msg: string) => {
+    setStatus(msg);
+    setTimeout(() => setStatus(""), 5000);
+  };
 
   // Weekday labels shown at the top.
   const [selectedDay, setSelectedDay] = useState(0);
@@ -559,7 +581,7 @@ function HomeScreen() {
       ),
     );
 
-    setStatus(`${selectedEvent.title} start time pushed back 20 minutes.`);
+    showStatus(`${selectedEvent.title} start time pushed back 20 minutes.`);
     setOpenEventOptions(false);
   };
 
@@ -598,7 +620,7 @@ function HomeScreen() {
       ),
     );
 
-    setStatus(`${selectedEvent.title} was extended by 20 minutes.`);
+    showStatus(`${selectedEvent.title} was extended by 20 minutes.`);
     setOpenEventOptions(false);
   };
 
@@ -615,7 +637,7 @@ function HomeScreen() {
       prev.filter((event) => event.id !== selectedEvent.id),
     );
 
-    setStatus(`${selectedEvent.title} was cancelled.`);
+    showStatus(`${selectedEvent.title} was cancelled.`);
     setOpenEventOptions(false);
     setSelectedId(null);
 
@@ -948,7 +970,7 @@ function HomeScreen() {
               };
 
               setManualEvents((prev) => [...prev, newTimelineEvent]);
-              setStatus(`"${newEvent.title}" was added.`);
+              showStatus(`"${newEvent.title}" was added.`);
               setActiveTab("events");
             }}
             onCancel={() => setActiveTab("events")}
@@ -1043,6 +1065,38 @@ function HomeScreen() {
 
             <Pressable
               style={[styles.modalBtn, { borderColor: colors.border }]}
+              onPress={() => {
+                setOpenEventOptions(false);
+                if (selectedEvent) {
+                  const now = new Date();
+                  setEditFields({
+                    title: selectedEvent.title,
+                    location: selectedEvent.location,
+                    description: selectedEvent.description,
+                    startTime: new Date(now.setHours(selectedEvent.startHour, selectedEvent.startMinute, 0, 0)),
+                    endTime: new Date(new Date().setHours(selectedEvent.endHour, selectedEvent.endMinute, 0, 0)),
+                    showStartPicker: false,
+                    showEndPicker: false,
+                  });
+                }
+                setOpenEditEvent(true);
+              }}
+            >
+              <Text style={[styles.text, { color: colors.text }]}>Edit</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.modalBtn, { borderColor: colors.border }]}
+              onPress={() => {
+                setOpenEventOptions(false);
+                setOpenInvite(true);
+              }}
+            >
+              <Text style={[styles.text, { color: colors.text }]}>Invite</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.modalBtn, { borderColor: colors.border }]}
               onPress={handleCancel}
             >
               <Text style={[styles.text, { color: colors.text }]}>Cancel</Text>
@@ -1053,6 +1107,215 @@ function HomeScreen() {
               onPress={() => setOpenEventOptions(false)}
             >
               <Text style={[styles.text, { color: colors.text }]}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit event modal */}
+      <Modal transparent visible={openEditEvent} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modal,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                width: 300,
+                padding: 20,
+              },
+            ]}
+          >
+            <ScrollView contentContainerStyle={{ paddingBottom: 10 }}>
+              <Text style={[styles.text, { color: colors.text, fontSize: 18, marginBottom: 16 }]}>
+                Edit Event
+              </Text>
+
+              {editFields && (
+                <>
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>Title</Text>
+                  <TextInput
+                    value={editFields.title}
+                    onChangeText={(v) => setEditFields({ ...editFields, title: v })}
+                    placeholderTextColor={colors.border}
+                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12 }}
+                  />
+
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>Location</Text>
+                  <TextInput
+                    value={editFields.location}
+                    onChangeText={(v) => setEditFields({ ...editFields, location: v })}
+                    placeholderTextColor={colors.border}
+                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12 }}
+                  />
+
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>Description</Text>
+                  <TextInput
+                    value={editFields.description}
+                    onChangeText={(v) => setEditFields({ ...editFields, description: v })}
+                    multiline
+                    numberOfLines={3}
+                    placeholderTextColor={colors.border}
+                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12, textAlignVertical: "top" }}
+                  />
+
+                  <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.smallLabel, { color: colors.text }]}>Start Time</Text>
+                      <Pressable
+                        onPress={() => setEditFields({ ...editFields, showStartPicker: true })}
+                        style={{ borderWidth: 1, borderColor: colors.border, padding: 10 }}
+                      >
+                        <Text style={{ color: colors.text, fontSize: 15 }}>
+                          {editFields.startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                        </Text>
+                      </Pressable>
+                      {editFields.showStartPicker && (
+                        <DateTimePicker
+                          value={editFields.startTime}
+                          mode="time"
+                          display="default"
+                          onChange={(e: DateTimePickerEvent, selected?: Date) => {
+                            setEditFields({ ...editFields, showStartPicker: false, startTime: selected ?? editFields.startTime });
+                          }}
+                        />
+                      )}
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.smallLabel, { color: colors.text }]}>End Time</Text>
+                      <Pressable
+                        onPress={() => setEditFields({ ...editFields, showEndPicker: true })}
+                        style={{ borderWidth: 1, borderColor: colors.border, padding: 10 }}
+                      >
+                        <Text style={{ color: colors.text, fontSize: 15 }}>
+                          {editFields.endTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                        </Text>
+                      </Pressable>
+                      {editFields.showEndPicker && (
+                        <DateTimePicker
+                          value={editFields.endTime}
+                          mode="time"
+                          display="default"
+                          onChange={(e: DateTimePickerEvent, selected?: Date) => {
+                            setEditFields({ ...editFields, showEndPicker: false, endTime: selected ?? editFields.endTime });
+                          }}
+                        />
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <Pressable
+                      onPress={() => setOpenEditEvent(false)}
+                      style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center" }}
+                    >
+                      <Text style={[styles.text, { color: colors.text }]}>Cancel</Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => {
+                        setManualEvents((prev) =>
+                          prev.map((e) =>
+                            e.id === selectedEvent?.id
+                              ? {
+                                  ...e,
+                                  title: editFields.title,
+                                  location: editFields.location,
+                                  description: editFields.description,
+                                  startHour: editFields.startTime.getHours(),
+                                  startMinute: editFields.startTime.getMinutes(),
+                                  endHour: editFields.endTime.getHours(),
+                                  endMinute: editFields.endTime.getMinutes(),
+                                }
+                              : e
+                          )
+                        );
+                        setOpenEditEvent(false);
+                        showStatus(`"${editFields.title}" was updated.`);
+                      }}
+                      style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center", backgroundColor: colors.accent }}
+                    >
+                      <Text style={[styles.text, { color: "#fff" }]}>Save</Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Invite friends modal */}
+      <Modal transparent visible={openInvite} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modal,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                width: 300,
+                padding: 20,
+              },
+            ]}
+          >
+            <Text style={[styles.text, { color: colors.text, fontSize: 18, marginBottom: 16 }]}>
+              Invite to {selectedEvent?.title}
+            </Text>
+
+            {contacts.map((contact) => {
+              const isInvited = selectedEvent?.friends.includes(contact.name) ?? false;
+              return (
+                <Pressable
+                  key={contact.id}
+                  onPress={() => {
+                    setManualEvents((prev) =>
+                      prev.map((e) =>
+                        e.id === selectedEvent?.id
+                          ? {
+                              ...e,
+                              friends: isInvited
+                                ? e.friends.filter((f) => f !== contact.name)
+                                : [...e.friends, contact.name],
+                            }
+                          : e
+                      )
+                    );
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: isInvited ? colors.text : colors.border,
+                    padding: 10,
+                    marginBottom: 8,
+                    borderRadius: 6,
+                    backgroundColor: isInvited
+                      ? theme === "dark" ? "#4a4a4a" : "#d7d7d7"
+                      : "transparent",
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontSize: 14 }}>{contact.name}</Text>
+                  <Text style={{ color: colors.text, fontSize: 16 }}>
+                    {isInvited ? "✓" : "+"}
+                  </Text>
+                </Pressable>
+              );
+            })}
+
+            {contacts.length === 0 && (
+              <Text style={{ color: colors.border, fontSize: 13, marginBottom: 16 }}>
+                No contacts yet — add some in the Social tab.
+              </Text>
+            )}
+
+            <Pressable
+              onPress={() => setOpenInvite(false)}
+              style={[styles.closeBtn, { borderColor: colors.border, marginTop: 8 }]}
+            >
+              <Text style={[styles.text, { color: colors.text }]}>Done</Text>
             </Pressable>
           </View>
         </View>
