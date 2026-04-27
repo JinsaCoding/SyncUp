@@ -23,8 +23,8 @@ import {
 } from "react-native-safe-area-context";
 import { GlobalStyles, GlobalThemes } from "./styles";
 
-import { useContacts } from './context/ContactContext';
-import { useTheme } from './context/ThemeContext';
+import { useContacts } from "./context/ContactContext";
+import { useTheme } from "./context/ThemeContext";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -556,7 +556,8 @@ function HomeScreen() {
   const handleLate = () => {
     if (!selectedEvent) return;
 
-    const totalMinutes = selectedEvent.startHour * 60 + selectedEvent.startMinute + 20;
+    const totalMinutes =
+      selectedEvent.startHour * 60 + selectedEvent.startMinute + 20;
     const newHour = Math.floor(totalMinutes / 60);
     const newMinute = totalMinutes % 60;
 
@@ -566,7 +567,12 @@ function HomeScreen() {
           ? {
               ...event,
               startDate: new Date(
-                new Date(event.startDate || new Date()).setHours(newHour, newMinute, 0, 0)
+                new Date(event.startDate || new Date()).setHours(
+                  newHour,
+                  newMinute,
+                  0,
+                  0,
+                ),
               ),
             }
           : event,
@@ -645,337 +651,346 @@ function HomeScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[
+    <View
+      style={[
         styles.container,
-        {
-          backgroundColor: colors.background,
-          paddingTop: insets.top + 12,
-        },
+        { backgroundColor: colors.background, paddingTop: insets.top + 12 },
       ]}
     >
-      <View
-        style={[
-          styles.phoneFrame,
-          {
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
-        {/* Header row:
+      <View style={[styles.phoneFrame, { backgroundColor: colors.background }]}>
+        <View style={{ flex: 1 }}>
+          {/* Header row:
             weekday tabs scroll horizontally so they do not run off-screen,
             and the settings icon stays visible on the right */}
-        <View style={styles.headerRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabsScrollContent}
-          >
-            {days.map((day, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => {
-                  setSelectedDay(index);
-                  setSelectedId(null);
-                }}
+          <View style={styles.headerRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tabsScrollContent}
+            >
+              {days.map((day, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setSelectedDay(index);
+                    setSelectedId(null);
+                  }}
+                  style={[
+                    styles.tab,
+                    { borderColor: colors.border },
+                    selectedDay === index && {
+                      backgroundColor: theme === "dark" ? "#4a4a4a" : "#d7d7d7",
+                    },
+                  ]}
+                >
+                  <Text style={[styles.text, { color: colors.text }]}>
+                    {day.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.settingsTab, { borderColor: colors.border }]}
+              onPress={() => setOpenSettings(true)}
+            >
+              <Text style={[styles.text, { color: colors.text }]}>⚙</Text>
+            </TouchableOpacity>
+          </View>
+
+          {activeTab !== "add" && (
+            <>
+              {/* Top timeline section */}
+              <View style={styles.topTimelineWrapper}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator
+                  contentContainerStyle={styles.timelineScrollContent}
+                >
+                  <View
+                    style={[styles.timelineOuter, { width: timelineWidth }]}
+                  >
+                    {/* Hour labels */}
+                    <View style={styles.hourRow}>
+                      {Array.from(
+                        { length: timelineEndHour - timelineStartHour + 1 },
+                        (_, i) => timelineStartHour + i,
+                      ).map((hour) => (
+                        <View
+                          key={hour}
+                          style={[styles.hourCell, { width: hourWidth }]}
+                        >
+                          <Text
+                            style={[styles.hourLabel, { color: colors.text }]}
+                          >
+                            {formatHourLabel(hour)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Tick marks under the hour labels */}
+                    <View
+                      style={[
+                        styles.tickLine,
+                        { borderTopColor: colors.border },
+                      ]}
+                    >
+                      {Array.from(
+                        { length: timelineEndHour - timelineStartHour + 1 },
+                        (_, i) => timelineStartHour + i,
+                      ).map((hour) => (
+                        <View
+                          key={hour}
+                          style={[styles.tickGroup, { width: hourWidth }]}
+                        >
+                          <View
+                            style={[
+                              styles.tick,
+                              { backgroundColor: colors.border },
+                            ]}
+                          />
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Event blocks placed on the timeline using start time and width */}
+                    <View style={styles.eventLayer}>
+                      {mappedEvents.length === 0 ? (
+                        <Text
+                          style={[
+                            styles.text,
+                            { color: colors.text, marginTop: 12 },
+                          ]}
+                        >
+                          No events found for the next 7 days.
+                        </Text>
+                      ) : (
+                        mappedEvents.map((event) => {
+                          const startOffsetHours =
+                            event.startHour +
+                            event.startMinute / 60 -
+                            timelineStartHour;
+
+                          const durationHours =
+                            event.endHour +
+                            event.endMinute / 60 -
+                            (event.startHour + event.startMinute / 60);
+
+                          const left = startOffsetHours * hourWidth + 6;
+                          const width = durationHours * hourWidth - 12;
+
+                          return (
+                            <Pressable
+                              key={event.id}
+                              style={[
+                                styles.timelineEvent,
+                                {
+                                  left,
+                                  width: Math.max(width, 60),
+                                  borderColor: colors.border,
+                                  backgroundColor:
+                                    selectedId === event.id
+                                      ? theme === "dark"
+                                        ? "#4a4a4a"
+                                        : "#d7d7d7"
+                                      : "transparent",
+                                },
+                              ]}
+                              onPress={() => setSelectedId(event.id)}
+                            >
+                              <Text
+                                style={[styles.text, { color: colors.text }]}
+                                numberOfLines={1}
+                              >
+                                {event.title}
+                              </Text>
+                            </Pressable>
+                          );
+                        })
+                      )}
+                    </View>
+                  </View>
+                </ScrollView>
+              </View>
+
+              {/* Main event details section */}
+              <View
                 style={[
-                  styles.tab,
-                  { borderColor: colors.border },
-                  selectedDay === index && {
-                    backgroundColor: theme === "dark" ? "#4a4a4a" : "#d7d7d7",
+                  styles.main,
+                  {
+                    borderTopColor: colors.border,
                   },
                 ]}
               >
-                <Text style={[styles.text, { color: colors.text }]}>
-                  {day.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <TouchableOpacity
-            style={[styles.settingsTab, { borderColor: colors.border }]}
-            onPress={() => setOpenSettings(true)}
-          >
-            <Text style={[styles.text, { color: colors.text }]}>⚙</Text>
-          </TouchableOpacity>
-        </View>
-
-        {activeTab !== "add" && (
-          <>
-            {/* Top timeline section */}
-            <View style={styles.topTimelineWrapper}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator
-                contentContainerStyle={styles.timelineScrollContent}
-              >
-                <View style={[styles.timelineOuter, { width: timelineWidth }]}>
-                  {/* Hour labels */}
-                  <View style={styles.hourRow}>
-                    {Array.from(
-                      { length: timelineEndHour - timelineStartHour + 1 },
-                      (_, i) => timelineStartHour + i,
-                    ).map((hour) => (
-                      <View
-                        key={hour}
-                        style={[styles.hourCell, { width: hourWidth }]}
-                      >
-                        <Text
-                          style={[styles.hourLabel, { color: colors.text }]}
-                        >
-                          {formatHourLabel(hour)}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  {/* Tick marks under the hour labels */}
-                  <View
-                    style={[styles.tickLine, { borderTopColor: colors.border }]}
-                  >
-                    {Array.from(
-                      { length: timelineEndHour - timelineStartHour + 1 },
-                      (_, i) => timelineStartHour + i,
-                    ).map((hour) => (
-                      <View
-                        key={hour}
-                        style={[styles.tickGroup, { width: hourWidth }]}
-                      >
-                        <View
-                          style={[
-                            styles.tick,
-                            { backgroundColor: colors.border },
-                          ]}
-                        />
-                      </View>
-                    ))}
-                  </View>
-
-                  {/* Event blocks placed on the timeline using start time and width */}
-                  <View style={styles.eventLayer}>
-                    {mappedEvents.length === 0 ? (
-                      <Text
-                        style={[
-                          styles.text,
-                          { color: colors.text, marginTop: 12 },
-                        ]}
-                      >
-                        No events found for the next 7 days.
-                      </Text>
-                    ) : (
-                      mappedEvents.map((event) => {
-                        const startOffsetHours =
-                          event.startHour +
-                          event.startMinute / 60 -
-                          timelineStartHour;
-
-                        const durationHours =
-                          event.endHour +
-                          event.endMinute / 60 -
-                          (event.startHour + event.startMinute / 60);
-
-                        const left = startOffsetHours * hourWidth + 6;
-                        const width = durationHours * hourWidth - 12;
-
-                        return (
-                          <Pressable
-                            key={event.id}
-                            style={[
-                              styles.timelineEvent,
-                              {
-                                left,
-                                width: Math.max(width, 60),
-                                borderColor: colors.border,
-                                backgroundColor:
-                                  selectedId === event.id
-                                    ? theme === "dark"
-                                      ? "#4a4a4a"
-                                      : "#d7d7d7"
-                                    : "transparent",
-                              },
-                            ]}
-                            onPress={() => setSelectedId(event.id)}
-                          >
-                            <Text
-                              style={[styles.text, { color: colors.text }]}
-                              numberOfLines={1}
-                            >
-                              {event.title}
-                            </Text>
-                          </Pressable>
-                        );
-                      })
-                    )}
-                  </View>
-                </View>
-              </ScrollView>
-            </View>
-
-            {/* Main event details section */}
-            <View
-              style={[
-                styles.main,
-                {
-                  borderTopColor: colors.border,
-                },
-              ]}
-            >
-              {!selectedEvent ? (
-                <Text style={[styles.bigText, { color: colors.text }]}>
-                  Select Meeting
-                </Text>
-              ) : (
-                <>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <Text style={[styles.title, { color: colors.text, flex: 1 }]}>
-                      {selectedEvent.title}
-                    </Text>
-                    <Pressable
-                      onPress={() => setOpenEventOptions(true)}
+                {!selectedEvent ? (
+                  <Text style={[styles.bigText, { color: colors.text }]}>
+                    Select Meeting
+                  </Text>
+                ) : (
+                  <>
+                    <View
                       style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        borderRadius: 6,
-                        marginLeft: 8,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
                       }}
                     >
-                      <Text style={{ color: colors.text, fontSize: 18 }}>⋮</Text>
-                    </Pressable>
-                  </View>
-
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>
-                    Location
-                  </Text>
-                  <Text style={[styles.textLine, { color: colors.text }]}>
-                    {selectedEvent.location}
-                  </Text>
-
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>
-                    Time
-                  </Text>
-                  <Text style={[styles.textLine, { color: colors.text }]}>
-                    {formatRange(
-                      selectedEvent.startHour,
-                      selectedEvent.startMinute,
-                      selectedEvent.endHour,
-                      selectedEvent.endMinute,
-                    )}
-                  </Text>
-
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>
-                    Description
-                  </Text>
-                  <Text style={[styles.textLine, { color: colors.text }]}>
-                    {selectedEvent.description}
-                  </Text>
-
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>
-                    Friends attending
-                  </Text>
-                  <View style={styles.attendeeRow}>
-                    {selectedEvent.friends.length > 0 ? (
-                      selectedEvent.friends.map((person) => (
-                        <View
-                          key={person}
-                          style={[
-                            styles.attendeeBox,
-                            { borderColor: colors.border },
-                          ]}
-                        >
-                          <Text style={[styles.text, { color: colors.text }]}>
-                            {person}
-                          </Text>
-                        </View>
-                      ))
-                    ) : (
-                      <Text style={[styles.text, { color: colors.text }]}>
-                        None
+                      <Text
+                        style={[styles.title, { color: colors.text, flex: 1 }]}
+                      >
+                        {selectedEvent.title}
                       </Text>
-                    )}
-                  </View>
+                      <Pressable
+                        onPress={() => setOpenEventOptions(true)}
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: 6,
+                          marginLeft: 8,
+                        }}
+                      >
+                        <Text style={{ color: colors.text, fontSize: 18 }}>
+                          ⋮
+                        </Text>
+                      </Pressable>
+                    </View>
 
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>
-                    All attendees
-                  </Text>
-                  <View style={styles.attendeeRow}>
-                    {selectedEvent.attendees.length > 0 ? (
-                      selectedEvent.attendees.map((person) => (
-                        <View
-                          key={person}
-                          style={[
-                            styles.attendeeBox,
-                            { borderColor: colors.border },
-                          ]}
-                        >
-                          <Text style={[styles.text, { color: colors.text }]}>
-                            {person}
-                          </Text>
-                        </View>
-                      ))
-                    ) : (
-                      <Text style={[styles.text, { color: colors.text }]}>
-                        None
-                      </Text>
-                    )}
-                  </View>
-
-                  <Pressable
-                    style={[styles.joinBtn, { borderColor: colors.border }]}
-                  >
-                    <Text style={[styles.text, { color: colors.text }]}>
-                      Join
+                    <Text style={[styles.smallLabel, { color: colors.text }]}>
+                      Location
                     </Text>
-                  </Pressable>
-                </>
-              )}
-            </View>
+                    <Text style={[styles.textLine, { color: colors.text }]}>
+                      {selectedEvent.location}
+                    </Text>
 
-            {/* Status message box */}
-            {status !== "" && (
-              <View style={[styles.statusBox, { borderColor: colors.border }]}>
-                <Text style={[styles.text, { color: colors.text }]}>
-                  {status}
-                </Text>
+                    <Text style={[styles.smallLabel, { color: colors.text }]}>
+                      Time
+                    </Text>
+                    <Text style={[styles.textLine, { color: colors.text }]}>
+                      {formatRange(
+                        selectedEvent.startHour,
+                        selectedEvent.startMinute,
+                        selectedEvent.endHour,
+                        selectedEvent.endMinute,
+                      )}
+                    </Text>
+
+                    <Text style={[styles.smallLabel, { color: colors.text }]}>
+                      Description
+                    </Text>
+                    <Text style={[styles.textLine, { color: colors.text }]}>
+                      {selectedEvent.description}
+                    </Text>
+
+                    <Text style={[styles.smallLabel, { color: colors.text }]}>
+                      Friends attending
+                    </Text>
+                    <View style={styles.attendeeRow}>
+                      {selectedEvent.friends.length > 0 ? (
+                        selectedEvent.friends.map((person) => (
+                          <View
+                            key={person}
+                            style={[
+                              styles.attendeeBox,
+                              { borderColor: colors.border },
+                            ]}
+                          >
+                            <Text style={[styles.text, { color: colors.text }]}>
+                              {person}
+                            </Text>
+                          </View>
+                        ))
+                      ) : (
+                        <Text style={[styles.text, { color: colors.text }]}>
+                          None
+                        </Text>
+                      )}
+                    </View>
+
+                    <Text style={[styles.smallLabel, { color: colors.text }]}>
+                      All attendees
+                    </Text>
+                    <View style={styles.attendeeRow}>
+                      {selectedEvent.attendees.length > 0 ? (
+                        selectedEvent.attendees.map((person) => (
+                          <View
+                            key={person}
+                            style={[
+                              styles.attendeeBox,
+                              { borderColor: colors.border },
+                            ]}
+                          >
+                            <Text style={[styles.text, { color: colors.text }]}>
+                              {person}
+                            </Text>
+                          </View>
+                        ))
+                      ) : (
+                        <Text style={[styles.text, { color: colors.text }]}>
+                          None
+                        </Text>
+                      )}
+                    </View>
+
+                    <Pressable
+                      style={[styles.joinBtn, { borderColor: colors.border }]}
+                    >
+                      <Text style={[styles.text, { color: colors.text }]}>
+                        Join
+                      </Text>
+                    </Pressable>
+                  </>
+                )}
               </View>
-            )}
-          </>
-        )}
 
-        {/* Add Event form */}
-        {activeTab === "add" && (
-          <AddEventForm
-            colors={colors}
-            onSave={(newEvent) => {
-              const newTimelineEvent: TimelineEvent = {
-                id: `manual-${Date.now()}`,
-                title: newEvent.title || "Untitled Event",
-                location: newEvent.location || "No location",
-                description:
-                  newEvent.description || "No description available.",
-                friends: newEvent.friends
-                  ? newEvent.friends
-                      .split(",")
-                      .map((f) => f.trim())
-                      .filter(Boolean)
-                  : [],
-                attendees: [],
-                startHour: newEvent.startTime.getHours(),
-                startMinute: newEvent.startTime.getMinutes(),
-                endHour: newEvent.endTime.getHours(),
-                endMinute: newEvent.endTime.getMinutes(),
-                type: "meeting",
-              };
+              {/* Status message box */}
+              {status !== "" && (
+                <View
+                  style={[styles.statusBox, { borderColor: colors.border }]}
+                >
+                  <Text style={[styles.text, { color: colors.text }]}>
+                    {status}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
 
-              setManualEvents((prev) => [...prev, newTimelineEvent]);
-              showStatus(`"${newEvent.title}" was added.`);
-              setActiveTab("events");
-            }}
-            onCancel={() => setActiveTab("events")}
-          />
-        )}
+          {/* Add Event form */}
+          {activeTab === "add" && (
+            <AddEventForm
+              colors={colors}
+              onSave={(newEvent) => {
+                const newTimelineEvent: TimelineEvent = {
+                  id: `manual-${Date.now()}`,
+                  title: newEvent.title || "Untitled Event",
+                  location: newEvent.location || "No location",
+                  description:
+                    newEvent.description || "No description available.",
+                  friends: newEvent.friends
+                    ? newEvent.friends
+                        .split(",")
+                        .map((f) => f.trim())
+                        .filter(Boolean)
+                    : [],
+                  attendees: [],
+                  startHour: newEvent.startTime.getHours(),
+                  startMinute: newEvent.startTime.getMinutes(),
+                  endHour: newEvent.endTime.getHours(),
+                  endMinute: newEvent.endTime.getMinutes(),
+                  type: "meeting",
+                };
+
+                setManualEvents((prev) => [...prev, newTimelineEvent]);
+                showStatus(`"${newEvent.title}" was added.`);
+                setActiveTab("events");
+              }}
+              onCancel={() => setActiveTab("events")}
+            />
+          )}
+        </View>
 
         {/* Bottom navigation buttons */}
         <View style={[GlobalStyles.bottom, { borderTopColor: colors.border }]}>
@@ -1073,8 +1088,22 @@ function HomeScreen() {
                     title: selectedEvent.title,
                     location: selectedEvent.location,
                     description: selectedEvent.description,
-                    startTime: new Date(now.setHours(selectedEvent.startHour, selectedEvent.startMinute, 0, 0)),
-                    endTime: new Date(new Date().setHours(selectedEvent.endHour, selectedEvent.endMinute, 0, 0)),
+                    startTime: new Date(
+                      now.setHours(
+                        selectedEvent.startHour,
+                        selectedEvent.startMinute,
+                        0,
+                        0,
+                      ),
+                    ),
+                    endTime: new Date(
+                      new Date().setHours(
+                        selectedEvent.endHour,
+                        selectedEvent.endMinute,
+                        0,
+                        0,
+                      ),
+                    ),
                     showStartPicker: false,
                     showEndPicker: false,
                   });
@@ -1127,47 +1156,100 @@ function HomeScreen() {
             ]}
           >
             <ScrollView contentContainerStyle={{ paddingBottom: 10 }}>
-              <Text style={[styles.text, { color: colors.text, fontSize: 18, marginBottom: 16 }]}>
+              <Text
+                style={[
+                  styles.text,
+                  { color: colors.text, fontSize: 18, marginBottom: 16 },
+                ]}
+              >
                 Edit Event
               </Text>
 
               {editFields && (
                 <>
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>Title</Text>
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>
+                    Title
+                  </Text>
                   <TextInput
                     value={editFields.title}
-                    onChangeText={(v) => setEditFields({ ...editFields, title: v })}
+                    onChangeText={(v) =>
+                      setEditFields({ ...editFields, title: v })
+                    }
                     placeholderTextColor={colors.border}
-                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12 }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      color: colors.text,
+                      padding: 10,
+                      marginBottom: 12,
+                    }}
                   />
 
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>Location</Text>
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>
+                    Location
+                  </Text>
                   <TextInput
                     value={editFields.location}
-                    onChangeText={(v) => setEditFields({ ...editFields, location: v })}
+                    onChangeText={(v) =>
+                      setEditFields({ ...editFields, location: v })
+                    }
                     placeholderTextColor={colors.border}
-                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12 }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      color: colors.text,
+                      padding: 10,
+                      marginBottom: 12,
+                    }}
                   />
 
-                  <Text style={[styles.smallLabel, { color: colors.text }]}>Description</Text>
+                  <Text style={[styles.smallLabel, { color: colors.text }]}>
+                    Description
+                  </Text>
                   <TextInput
                     value={editFields.description}
-                    onChangeText={(v) => setEditFields({ ...editFields, description: v })}
+                    onChangeText={(v) =>
+                      setEditFields({ ...editFields, description: v })
+                    }
                     multiline
                     numberOfLines={3}
                     placeholderTextColor={colors.border}
-                    style={{ borderWidth: 1, borderColor: colors.border, color: colors.text, padding: 10, marginBottom: 12, textAlignVertical: "top" }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      color: colors.text,
+                      padding: 10,
+                      marginBottom: 12,
+                      textAlignVertical: "top",
+                    }}
                   />
 
-                  <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+                  <View
+                    style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}
+                  >
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.smallLabel, { color: colors.text }]}>Start Time</Text>
+                      <Text style={[styles.smallLabel, { color: colors.text }]}>
+                        Start Time
+                      </Text>
                       <Pressable
-                        onPress={() => setEditFields({ ...editFields, showStartPicker: true })}
-                        style={{ borderWidth: 1, borderColor: colors.border, padding: 10 }}
+                        onPress={() =>
+                          setEditFields({
+                            ...editFields,
+                            showStartPicker: true,
+                          })
+                        }
+                        style={{
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          padding: 10,
+                        }}
                       >
                         <Text style={{ color: colors.text, fontSize: 15 }}>
-                          {editFields.startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                          {editFields.startTime.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </Text>
                       </Pressable>
                       {editFields.showStartPicker && (
@@ -1175,21 +1257,40 @@ function HomeScreen() {
                           value={editFields.startTime}
                           mode="time"
                           display="default"
-                          onChange={(e: DateTimePickerEvent, selected?: Date) => {
-                            setEditFields({ ...editFields, showStartPicker: false, startTime: selected ?? editFields.startTime });
+                          onChange={(
+                            e: DateTimePickerEvent,
+                            selected?: Date,
+                          ) => {
+                            setEditFields({
+                              ...editFields,
+                              showStartPicker: false,
+                              startTime: selected ?? editFields.startTime,
+                            });
                           }}
                         />
                       )}
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.smallLabel, { color: colors.text }]}>End Time</Text>
+                      <Text style={[styles.smallLabel, { color: colors.text }]}>
+                        End Time
+                      </Text>
                       <Pressable
-                        onPress={() => setEditFields({ ...editFields, showEndPicker: true })}
-                        style={{ borderWidth: 1, borderColor: colors.border, padding: 10 }}
+                        onPress={() =>
+                          setEditFields({ ...editFields, showEndPicker: true })
+                        }
+                        style={{
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          padding: 10,
+                        }}
                       >
                         <Text style={{ color: colors.text, fontSize: 15 }}>
-                          {editFields.endTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                          {editFields.endTime.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </Text>
                       </Pressable>
                       {editFields.showEndPicker && (
@@ -1197,8 +1298,15 @@ function HomeScreen() {
                           value={editFields.endTime}
                           mode="time"
                           display="default"
-                          onChange={(e: DateTimePickerEvent, selected?: Date) => {
-                            setEditFields({ ...editFields, showEndPicker: false, endTime: selected ?? editFields.endTime });
+                          onChange={(
+                            e: DateTimePickerEvent,
+                            selected?: Date,
+                          ) => {
+                            setEditFields({
+                              ...editFields,
+                              showEndPicker: false,
+                              endTime: selected ?? editFields.endTime,
+                            });
                           }}
                         />
                       )}
@@ -1208,9 +1316,17 @@ function HomeScreen() {
                   <View style={{ flexDirection: "row", gap: 10 }}>
                     <Pressable
                       onPress={() => setOpenEditEvent(false)}
-                      style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center" }}
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        paddingVertical: 10,
+                        alignItems: "center",
+                      }}
                     >
-                      <Text style={[styles.text, { color: colors.text }]}>Cancel</Text>
+                      <Text style={[styles.text, { color: colors.text }]}>
+                        Cancel
+                      </Text>
                     </Pressable>
 
                     <Pressable
@@ -1224,17 +1340,25 @@ function HomeScreen() {
                                   location: editFields.location,
                                   description: editFields.description,
                                   startHour: editFields.startTime.getHours(),
-                                  startMinute: editFields.startTime.getMinutes(),
+                                  startMinute:
+                                    editFields.startTime.getMinutes(),
                                   endHour: editFields.endTime.getHours(),
                                   endMinute: editFields.endTime.getMinutes(),
                                 }
-                              : e
-                          )
+                              : e,
+                          ),
                         );
                         setOpenEditEvent(false);
                         showStatus(`"${editFields.title}" was updated.`);
                       }}
-                      style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center", backgroundColor: colors.accent }}
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        paddingVertical: 10,
+                        alignItems: "center",
+                        backgroundColor: colors.accent,
+                      }}
                     >
                       <Text style={[styles.text, { color: "#fff" }]}>Save</Text>
                     </Pressable>
@@ -1260,12 +1384,18 @@ function HomeScreen() {
               },
             ]}
           >
-            <Text style={[styles.text, { color: colors.text, fontSize: 18, marginBottom: 16 }]}>
+            <Text
+              style={[
+                styles.text,
+                { color: colors.text, fontSize: 18, marginBottom: 16 },
+              ]}
+            >
               Invite to {selectedEvent?.title}
             </Text>
 
             {contacts.map((contact) => {
-              const isInvited = selectedEvent?.friends.includes(contact.name) ?? false;
+              const isInvited =
+                selectedEvent?.friends.includes(contact.name) ?? false;
               return (
                 <Pressable
                   key={contact.id}
@@ -1279,8 +1409,8 @@ function HomeScreen() {
                                 ? e.friends.filter((f) => f !== contact.name)
                                 : [...e.friends, contact.name],
                             }
-                          : e
-                      )
+                          : e,
+                      ),
                     );
                   }}
                   style={{
@@ -1293,11 +1423,15 @@ function HomeScreen() {
                     marginBottom: 8,
                     borderRadius: 6,
                     backgroundColor: isInvited
-                      ? theme === "dark" ? "#4a4a4a" : "#d7d7d7"
+                      ? theme === "dark"
+                        ? "#4a4a4a"
+                        : "#d7d7d7"
                       : "transparent",
                   }}
                 >
-                  <Text style={{ color: colors.text, fontSize: 14 }}>{contact.name}</Text>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>
+                    {contact.name}
+                  </Text>
                   <Text style={{ color: colors.text, fontSize: 16 }}>
                     {isInvited ? "✓" : "+"}
                   </Text>
@@ -1306,14 +1440,19 @@ function HomeScreen() {
             })}
 
             {contacts.length === 0 && (
-              <Text style={{ color: colors.border, fontSize: 13, marginBottom: 16 }}>
+              <Text
+                style={{ color: colors.border, fontSize: 13, marginBottom: 16 }}
+              >
                 No contacts yet — add some in the Social tab.
               </Text>
             )}
 
             <Pressable
               onPress={() => setOpenInvite(false)}
-              style={[styles.closeBtn, { borderColor: colors.border, marginTop: 8 }]}
+              style={[
+                styles.closeBtn,
+                { borderColor: colors.border, marginTop: 8 },
+              ]}
             >
               <Text style={[styles.text, { color: colors.text }]}>Done</Text>
             </Pressable>
@@ -1381,18 +1520,18 @@ function HomeScreen() {
           </View>
         </Pressable>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 20,
+    flex: 1,
+    paddingBottom: 40,
   },
 
   phoneFrame: {
     flex: 1,
-    minHeight: 720,
     padding: 10,
   },
 
@@ -1503,7 +1642,7 @@ const styles = StyleSheet.create({
   },
 
   main: {
-    minHeight: 380,
+    flex: 1,
     borderTopWidth: 1,
     paddingTop: 18,
     paddingHorizontal: 6,
