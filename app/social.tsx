@@ -240,14 +240,14 @@ export default function SocialScreen() {
               Add Contact
             </Text>
             <TextInput
-              style={GlobalStyles.modal_input}
+              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
               placeholder="Name"
               placeholderTextColor="#888"
               value={newName}
               onChangeText={setNewName}
             />
             <TextInput
-              style={GlobalStyles.modal_input}
+              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
               placeholder="Phone"
               placeholderTextColor="#888"
               value={newPhone}
@@ -255,7 +255,7 @@ export default function SocialScreen() {
               keyboardType="phone-pad"
             />
             <TextInput
-              style={GlobalStyles.modal_input}
+              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
               placeholder="Email"
               placeholderTextColor="#888"
               value={newEmail}
