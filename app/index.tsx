@@ -293,9 +293,7 @@ function AddEventForm({
       >
         <ScrollView nestedScrollEnabled>
           {filteredContacts.length === 0 ? (
-            <Text
-              style={{ color: colors.border, fontSize: 13, padding: 10 }}
-            >
+            <Text style={{ color: colors.border, fontSize: 13, padding: 10 }}>
               No contacts.
             </Text>
           ) : (
@@ -313,9 +311,7 @@ function AddEventForm({
                     paddingHorizontal: 10,
                     borderBottomWidth: 1,
                     borderBottomColor: colors.border,
-                    backgroundColor: selected
-                      ? colors.accent
-                      : "transparent",
+                    backgroundColor: selected ? colors.accent : "transparent",
                   }}
                 >
                   <Text style={{ color: colors.text, fontSize: 14 }}>
@@ -357,9 +353,7 @@ function AddEventForm({
       >
         <ScrollView nestedScrollEnabled>
           {filteredGroups.length === 0 ? (
-            <Text
-              style={{ color: colors.border, fontSize: 13, padding: 10 }}
-            >
+            <Text style={{ color: colors.border, fontSize: 13, padding: 10 }}>
               No groups.
             </Text>
           ) : (
@@ -377,9 +371,7 @@ function AddEventForm({
                     paddingHorizontal: 10,
                     borderBottomWidth: 1,
                     borderBottomColor: colors.border,
-                    backgroundColor: selected
-                      ? colors.accent
-                      : "transparent",
+                    backgroundColor: selected ? colors.accent : "transparent",
                   }}
                 >
                   <View>
@@ -497,11 +489,15 @@ function HomeScreen() {
 
   // Tracks invited friends per event id. Works for both device-calendar
   // and manually-added events (manualEvents.friends only covers manual ones).
-  const [eventInvites, setEventInvites] = useState<Record<string, string[]>>({});
+  const [eventInvites, setEventInvites] = useState<Record<string, string[]>>(
+    {},
+  );
 
   // Controls the Late/Extend time-adjust modal.
   const [openTimeAdjust, setOpenTimeAdjust] = useState(false);
-  const [timeAdjustMode, setTimeAdjustMode] = useState<"late" | "extend">("late");
+  const [timeAdjustMode, setTimeAdjustMode] = useState<"late" | "extend">(
+    "late",
+  );
   const [timeAdjustMinutes, setTimeAdjustMinutes] = useState(20);
   const TIME_ADJUST_MIN = 5;
   const TIME_ADJUST_MAX = 120;
@@ -833,20 +829,31 @@ function HomeScreen() {
   // and sending a notification.
   const handleCancel = async () => {
     if (!selectedEvent) return;
-
-    setEvents((prevEvents) =>
-      prevEvents.filter((event) => String(event.id) !== selectedEvent.id),
+    Alert.alert(
+      "Cancel Event",
+      `Are you sure you want to cancel "${selectedEvent.title}"?`,
+      [
+        { text: "Keep", style: "cancel" },
+        {
+          text: "Cancel Event",
+          style: "destructive",
+          onPress: async () => {
+            setEvents((prevEvents) =>
+              prevEvents.filter(
+                (event) => String(event.id) !== selectedEvent.id,
+              ),
+            );
+            setManualEvents((prev) =>
+              prev.filter((event) => event.id !== selectedEvent.id),
+            );
+            showStatus(`${selectedEvent.title} was cancelled.`);
+            setOpenEventOptions(false);
+            setSelectedId(null);
+            await triggerNotification();
+          },
+        },
+      ],
     );
-
-    setManualEvents((prev) =>
-      prev.filter((event) => event.id !== selectedEvent.id),
-    );
-
-    showStatus(`${selectedEvent.title} was cancelled.`);
-    setOpenEventOptions(false);
-    setSelectedId(null);
-
-    await triggerNotification();
   };
 
   return (
@@ -962,7 +969,7 @@ function HomeScreen() {
                             { color: colors.text, marginTop: 12 },
                           ]}
                         >
-                          No events found for the next 7 days.
+                          No events found for today.
                         </Text>
                       ) : (
                         mappedEvents.map((event) => {
@@ -1119,39 +1126,6 @@ function HomeScreen() {
                         </View>
                       );
                     })()}
-
-                    <Text style={[styles.smallLabel, { color: colors.text }]}>
-                      All attendees
-                    </Text>
-                    <View style={styles.attendeeRow}>
-                      {selectedEvent.attendees.length > 0 ? (
-                        selectedEvent.attendees.map((person) => (
-                          <View
-                            key={person}
-                            style={[
-                              styles.attendeeBox,
-                              { borderColor: colors.border },
-                            ]}
-                          >
-                            <Text style={[styles.text, { color: colors.text }]}>
-                              {person}
-                            </Text>
-                          </View>
-                        ))
-                      ) : (
-                        <Text style={[styles.text, { color: colors.text }]}>
-                          None
-                        </Text>
-                      )}
-                    </View>
-
-                    <Pressable
-                      style={[styles.joinBtn, { borderColor: colors.border }]}
-                    >
-                      <Text style={[styles.text, { color: colors.text }]}>
-                        Join
-                      </Text>
-                    </Pressable>
                   </>
                 )}
               </View>
@@ -1232,7 +1206,7 @@ function HomeScreen() {
               },
             ]}
             onPress={() => {
-              router.push("/social");
+              router.push("./social");
             }}
           >
             <Text style={[GlobalStyles.bottomIcon, { color: colors.text }]}>
@@ -1607,7 +1581,9 @@ function HomeScreen() {
             {contacts.map((contact) => {
               const eid = selectedEvent?.id ?? "";
               const invitedList = eventInvites[eid] ?? [];
-              const isInvited = invitedList.includes(contact.name);
+              const isInvited =
+                invitedList.includes(contact.name) ||
+                (selectedEvent?.friends ?? []).includes(contact.name);
               return (
                 <Pressable
                   key={contact.id}
@@ -1795,7 +1771,9 @@ function HomeScreen() {
                   alignItems: "center",
                 }}
               >
-                <Text style={[styles.text, { color: colors.text }]}>Cancel</Text>
+                <Text style={[styles.text, { color: colors.text }]}>
+                  Cancel
+                </Text>
               </Pressable>
               <Pressable
                 onPress={applyTimeAdjust}

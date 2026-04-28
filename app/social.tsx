@@ -1,13 +1,14 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    FlatList,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Contact, Group } from "./context/ContactContext";
@@ -126,8 +127,21 @@ export default function SocialScreen() {
 
   function handleDeleteGroup() {
     if (!menuGroup) return;
-    deleteGroup(menuGroup.id);
-    setShowGroupMenuModal(false);
+    Alert.alert(
+      "Delete Group",
+      `Are you sure you want to delete "${menuGroup.name}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteGroup(menuGroup.id);
+            setShowGroupMenuModal(false);
+          },
+        },
+      ],
+    );
   }
 
   function toggleGroupExpand(groupId: string) {
@@ -175,8 +189,21 @@ export default function SocialScreen() {
 
   function handleDelete() {
     if (!menuContact) return;
-    deleteContact(menuContact.id);
-    setShowMenuModal(false);
+    Alert.alert(
+      "Delete Contact",
+      `Are you sure you want to delete "${menuContact.name}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteContact(menuContact.id);
+            setShowMenuModal(false);
+          },
+        },
+      ],
+    );
   }
 
   function handleEditContact() {
@@ -240,14 +267,20 @@ export default function SocialScreen() {
               Add Contact
             </Text>
             <TextInput
-              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
+              style={[
+                GlobalStyles.modal_input,
+                { borderColor: colors.border, borderWidth: 1 },
+              ]}
               placeholder="Name"
               placeholderTextColor="#888"
               value={newName}
               onChangeText={setNewName}
             />
             <TextInput
-              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
+              style={[
+                GlobalStyles.modal_input,
+                { borderColor: colors.border, borderWidth: 1 },
+              ]}
               placeholder="Phone"
               placeholderTextColor="#888"
               value={newPhone}
@@ -255,7 +288,10 @@ export default function SocialScreen() {
               keyboardType="phone-pad"
             />
             <TextInput
-              style={[GlobalStyles.modal_input, {borderColor: colors.border, borderWidth: 1}]}
+              style={[
+                GlobalStyles.modal_input,
+                { borderColor: colors.border, borderWidth: 1 },
+              ]}
               placeholder="Email"
               placeholderTextColor="#888"
               value={newEmail}
