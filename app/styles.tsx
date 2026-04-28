@@ -343,6 +343,7 @@ export const GlobalStyles = StyleSheet.create({
       backgroundColor: "#555555",
       color: 'white',
       borderRadius: 10,
+      paddingHorizontal: 14,
   },
 
   contacts_body: {
