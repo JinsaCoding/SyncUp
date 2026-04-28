@@ -4,7 +4,7 @@ import DateTimePicker, {
 import * as Calendar from "expo-calendar";
 import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -73,7 +73,10 @@ function AddEventForm({
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
-  const [friends, setFriends] = useState("");
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+  const [contactSearch, setContactSearch] = useState("");
+  const [groupSearch, setGroupSearch] = useState("");
 
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
@@ -83,7 +86,41 @@ function AddEventForm({
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const { contacts, addContact, deleteContact } = useContacts();
+  const { contacts, groups } = useContacts();
+
+  const toggleContact = (id: string) =>
+    setSelectedContactIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  const toggleGroup = (id: string) =>
+    setSelectedGroupIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  // Resolve selected contacts + group members into a unique, comma-separated
+  // names string so the existing onSave payload format is preserved.
+  const buildFriendsString = () => {
+    const names = new Set<string>();
+    contacts.forEach((c) => {
+      if (selectedContactIds.includes(c.id)) names.add(c.name);
+    });
+    groups.forEach((g) => {
+      if (selectedGroupIds.includes(g.id)) {
+        g.memberIds.forEach((mid) => {
+          const c = contacts.find((x) => x.id === mid);
+          if (c) names.add(c.name);
+        });
+      }
+    });
+    return Array.from(names).join(", ");
+  };
+
+  const filteredContacts = contacts.filter((c) =>
+    c.name.toLowerCase().includes(contactSearch.toLowerCase()),
+  );
+  const filteredGroups = groups.filter((g) =>
+    g.name.toLowerCase().includes(groupSearch.toLowerCase()),
+  );
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("en-US", {
@@ -230,20 +267,145 @@ function AddEventForm({
         }}
       />
 
-      {/* Invite Friends */}
-      <Text style={labelStyle}>Invite Friends</Text>
+      {/* Invite Contacts */}
+      <Text style={labelStyle}>Invite Contacts</Text>
       <TextInput
-        value={friends}
-        onChangeText={setFriends}
-        placeholder="Names or emails, comma separated"
+        value={contactSearch}
+        onChangeText={setContactSearch}
+        placeholder="Search contacts"
         placeholderTextColor={colors.border}
         style={{
-          ...fieldStyle,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 10,
+          marginBottom: 6,
           color: colors.text,
-          fontSize: 15,
-          marginBottom: 24,
+          fontSize: 14,
         }}
       />
+      <View
+        style={{
+          maxHeight: 160,
+          borderWidth: 1,
+          borderColor: colors.border,
+          marginBottom: 14,
+        }}
+      >
+        <ScrollView nestedScrollEnabled>
+          {filteredContacts.length === 0 ? (
+            <Text
+              style={{ color: colors.border, fontSize: 13, padding: 10 }}
+            >
+              No contacts.
+            </Text>
+          ) : (
+            filteredContacts.map((c) => {
+              const selected = selectedContactIds.includes(c.id);
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => toggleContact(c.id)}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                    paddingHorizontal: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: selected
+                      ? colors.accent
+                      : "transparent",
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontSize: 14 }}>
+                    {c.name}
+                  </Text>
+                  <Text style={{ color: colors.text, fontSize: 16 }}>
+                    {selected ? "✓" : "+"}
+                  </Text>
+                </Pressable>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
+
+      {/* Invite Groups */}
+      <Text style={labelStyle}>Invite Groups</Text>
+      <TextInput
+        value={groupSearch}
+        onChangeText={setGroupSearch}
+        placeholder="Search groups"
+        placeholderTextColor={colors.border}
+        style={{
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 10,
+          marginBottom: 6,
+          color: colors.text,
+          fontSize: 14,
+        }}
+      />
+      <View
+        style={{
+          maxHeight: 160,
+          borderWidth: 1,
+          borderColor: colors.border,
+          marginBottom: 24,
+        }}
+      >
+        <ScrollView nestedScrollEnabled>
+          {filteredGroups.length === 0 ? (
+            <Text
+              style={{ color: colors.border, fontSize: 13, padding: 10 }}
+            >
+              No groups.
+            </Text>
+          ) : (
+            filteredGroups.map((g) => {
+              const selected = selectedGroupIds.includes(g.id);
+              return (
+                <Pressable
+                  key={g.id}
+                  onPress={() => toggleGroup(g.id)}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                    paddingHorizontal: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: selected
+                      ? colors.accent
+                      : "transparent",
+                  }}
+                >
+                  <View>
+                    <Text style={{ color: colors.text, fontSize: 14 }}>
+                      {g.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.text,
+                        fontSize: 11,
+                        opacity: 0.6,
+                      }}
+                    >
+                      {g.memberIds.length}{" "}
+                      {g.memberIds.length === 1 ? "member" : "members"}
+                    </Text>
+                  </View>
+                  <Text style={{ color: colors.text, fontSize: 16 }}>
+                    {selected ? "✓" : "+"}
+                  </Text>
+                </Pressable>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
 
       {/* Buttons */}
       <View style={{ flexDirection: "row", gap: 10 }}>
@@ -269,7 +431,7 @@ function AddEventForm({
               date,
               startTime,
               endTime,
-              friends,
+              friends: buildFriendsString(),
             })
           }
           style={{
@@ -332,6 +494,24 @@ function HomeScreen() {
 
   // Controls the invite friends modal.
   const [openInvite, setOpenInvite] = useState(false);
+
+  // Tracks invited friends per event id. Works for both device-calendar
+  // and manually-added events (manualEvents.friends only covers manual ones).
+  const [eventInvites, setEventInvites] = useState<Record<string, string[]>>({});
+
+  // Controls the Late/Extend time-adjust modal.
+  const [openTimeAdjust, setOpenTimeAdjust] = useState(false);
+  const [timeAdjustMode, setTimeAdjustMode] = useState<"late" | "extend">("late");
+  const [timeAdjustMinutes, setTimeAdjustMinutes] = useState(20);
+  const TIME_ADJUST_MIN = 5;
+  const TIME_ADJUST_MAX = 120;
+  const TIME_ADJUST_STEP = 5;
+  const TIME_ADJUST_ITEM_WIDTH = 60;
+  const timeAdjustOptions = Array.from(
+    { length: (TIME_ADJUST_MAX - TIME_ADJUST_MIN) / TIME_ADJUST_STEP + 1 },
+    (_, i) => TIME_ADJUST_MIN + i * TIME_ADJUST_STEP,
+  );
+  const timeAdjustScrollRef = useRef<ScrollView>(null);
 
   // Stores which timeline event is currently selected.
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -552,82 +732,101 @@ function HomeScreen() {
     return { newHour, newMinute };
   };
 
-  // Handles the "Late" action.
-  const handleLate = () => {
-    if (!selectedEvent) return;
-
-    const totalMinutes =
-      selectedEvent.startHour * 60 + selectedEvent.startMinute + 20;
-    const newHour = Math.floor(totalMinutes / 60);
-    const newMinute = totalMinutes % 60;
-
-    setEvents((prevEvents) =>
-      prevEvents.map((event) =>
-        String(event.id) === selectedEvent.id
-          ? {
-              ...event,
-              startDate: new Date(
-                new Date(event.startDate || new Date()).setHours(
-                  newHour,
-                  newMinute,
-                  0,
-                  0,
-                ),
-              ),
-            }
-          : event,
-      ),
-    );
-
-    setManualEvents((prev) =>
-      prev.map((event) =>
-        event.id === selectedEvent.id
-          ? { ...event, startHour: newHour, startMinute: newMinute }
-          : event,
-      ),
-    );
-
-    showStatus(`${selectedEvent.title} start time pushed back 20 minutes.`);
+  // Opens the time-adjust modal in the requested mode.
+  const openLateExtendPicker = (mode: "late" | "extend") => {
+    setTimeAdjustMode(mode);
+    setTimeAdjustMinutes(20);
     setOpenEventOptions(false);
+    setOpenTimeAdjust(true);
+    // Scroll the picker to the default (20 min) once the modal is mounted.
+    setTimeout(() => {
+      const idx = timeAdjustOptions.indexOf(20);
+      timeAdjustScrollRef.current?.scrollTo({
+        x: idx * TIME_ADJUST_ITEM_WIDTH,
+        animated: false,
+      });
+    }, 50);
   };
 
-  // Handles the "Extend" action by adding 20 minutes to the event's end time.
-  const handleExtend = () => {
-    if (!selectedEvent) return;
+  // Applies the selected minute adjustment to the selected event.
+  const applyTimeAdjust = () => {
+    if (!selectedEvent) {
+      setOpenTimeAdjust(false);
+      return;
+    }
+    const minutes = timeAdjustMinutes;
 
-    const { newHour, newMinute } = addTwentyMinutesToEnd(
-      selectedEvent.endHour,
-      selectedEvent.endMinute,
-    );
+    if (timeAdjustMode === "late") {
+      const totalMinutes =
+        selectedEvent.startHour * 60 + selectedEvent.startMinute + minutes;
+      const newHour = Math.floor(totalMinutes / 60);
+      const newMinute = totalMinutes % 60;
 
-    setEvents((prevEvents) =>
-      prevEvents.map((event) =>
-        String(event.id) === selectedEvent.id
-          ? {
-              ...event,
-              endDate: new Date(
-                new Date(event.endDate || new Date()).setHours(
-                  newHour,
-                  newMinute,
-                  0,
-                  0,
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          String(event.id) === selectedEvent.id
+            ? {
+                ...event,
+                startDate: new Date(
+                  new Date(event.startDate || new Date()).setHours(
+                    newHour,
+                    newMinute,
+                    0,
+                    0,
+                  ),
                 ),
-              ),
-            }
-          : event,
-      ),
-    );
+              }
+            : event,
+        ),
+      );
 
-    setManualEvents((prev) =>
-      prev.map((event) =>
-        event.id === selectedEvent.id
-          ? { ...event, endHour: newHour, endMinute: newMinute }
-          : event,
-      ),
-    );
+      setManualEvents((prev) =>
+        prev.map((event) =>
+          event.id === selectedEvent.id
+            ? { ...event, startHour: newHour, startMinute: newMinute }
+            : event,
+        ),
+      );
 
-    showStatus(`${selectedEvent.title} was extended by 20 minutes.`);
-    setOpenEventOptions(false);
+      showStatus(
+        `${selectedEvent.title} start time pushed back ${minutes} minutes.`,
+      );
+    } else {
+      const totalMinutes =
+        selectedEvent.endHour * 60 + selectedEvent.endMinute + minutes;
+      const newHour = Math.floor(totalMinutes / 60);
+      const newMinute = totalMinutes % 60;
+
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          String(event.id) === selectedEvent.id
+            ? {
+                ...event,
+                endDate: new Date(
+                  new Date(event.endDate || new Date()).setHours(
+                    newHour,
+                    newMinute,
+                    0,
+                    0,
+                  ),
+                ),
+              }
+            : event,
+        ),
+      );
+
+      setManualEvents((prev) =>
+        prev.map((event) =>
+          event.id === selectedEvent.id
+            ? { ...event, endHour: newHour, endMinute: newMinute }
+            : event,
+        ),
+      );
+
+      showStatus(`${selectedEvent.title} was extended by ${minutes} minutes.`);
+    }
+
+    setOpenTimeAdjust(false);
   };
 
   // Handles the "Cancel" action by removing the event from the local list
@@ -887,27 +1086,39 @@ function HomeScreen() {
                     <Text style={[styles.smallLabel, { color: colors.text }]}>
                       Friends attending
                     </Text>
-                    <View style={styles.attendeeRow}>
-                      {selectedEvent.friends.length > 0 ? (
-                        selectedEvent.friends.map((person) => (
-                          <View
-                            key={person}
-                            style={[
-                              styles.attendeeBox,
-                              { borderColor: colors.border },
-                            ]}
-                          >
+                    {(() => {
+                      const displayedFriends = Array.from(
+                        new Set([
+                          ...selectedEvent.friends,
+                          ...(eventInvites[selectedEvent.id] ?? []),
+                        ]),
+                      );
+                      return (
+                        <View style={styles.attendeeRow}>
+                          {displayedFriends.length > 0 ? (
+                            displayedFriends.map((person) => (
+                              <View
+                                key={person}
+                                style={[
+                                  styles.attendeeBox,
+                                  { borderColor: colors.border },
+                                ]}
+                              >
+                                <Text
+                                  style={[styles.text, { color: colors.text }]}
+                                >
+                                  {person}
+                                </Text>
+                              </View>
+                            ))
+                          ) : (
                             <Text style={[styles.text, { color: colors.text }]}>
-                              {person}
+                              None
                             </Text>
-                          </View>
-                        ))
-                      ) : (
-                        <Text style={[styles.text, { color: colors.text }]}>
-                          None
-                        </Text>
-                      )}
-                    </View>
+                          )}
+                        </View>
+                      );
+                    })()}
 
                     <Text style={[styles.smallLabel, { color: colors.text }]}>
                       All attendees
@@ -1066,14 +1277,14 @@ function HomeScreen() {
           >
             <Pressable
               style={[styles.modalBtn, { borderColor: colors.border }]}
-              onPress={handleLate}
+              onPress={() => openLateExtendPicker("late")}
             >
               <Text style={[styles.text, { color: colors.text }]}>Late</Text>
             </Pressable>
 
             <Pressable
               style={[styles.modalBtn, { borderColor: colors.border }]}
-              onPress={handleExtend}
+              onPress={() => openLateExtendPicker("extend")}
             >
               <Text style={[styles.text, { color: colors.text }]}>Extend</Text>
             </Pressable>
@@ -1394,24 +1605,23 @@ function HomeScreen() {
             </Text>
 
             {contacts.map((contact) => {
-              const isInvited =
-                selectedEvent?.friends.includes(contact.name) ?? false;
+              const eid = selectedEvent?.id ?? "";
+              const invitedList = eventInvites[eid] ?? [];
+              const isInvited = invitedList.includes(contact.name);
               return (
                 <Pressable
                   key={contact.id}
                   onPress={() => {
-                    setManualEvents((prev) =>
-                      prev.map((e) =>
-                        e.id === selectedEvent?.id
-                          ? {
-                              ...e,
-                              friends: isInvited
-                                ? e.friends.filter((f) => f !== contact.name)
-                                : [...e.friends, contact.name],
-                            }
-                          : e,
-                      ),
-                    );
+                    if (!eid) return;
+                    setEventInvites((prev) => {
+                      const current = prev[eid] ?? [];
+                      return {
+                        ...prev,
+                        [eid]: isInvited
+                          ? current.filter((f) => f !== contact.name)
+                          : [...current, contact.name],
+                      };
+                    });
                   }}
                   style={{
                     flexDirection: "row",
@@ -1456,6 +1666,151 @@ function HomeScreen() {
             >
               <Text style={[styles.text, { color: colors.text }]}>Done</Text>
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time adjust modal (Late / Extend) */}
+      <Modal transparent visible={openTimeAdjust} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modal,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                width: 300,
+                padding: 20,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.text,
+                { color: colors.text, fontSize: 18, marginBottom: 8 },
+              ]}
+            >
+              {timeAdjustMode === "late"
+                ? "Push start time later by"
+                : "Extend end time by"}
+            </Text>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 28,
+                textAlign: "center",
+                marginVertical: 8,
+              }}
+            >
+              {timeAdjustMinutes} min
+            </Text>
+
+            {/* Snap-to-5min scroll picker */}
+            <View
+              style={{
+                height: 56,
+                justifyContent: "center",
+                marginBottom: 18,
+              }}
+            >
+              {/* Center highlight */}
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  marginLeft: -TIME_ADJUST_ITEM_WIDTH / 2,
+                  width: TIME_ADJUST_ITEM_WIDTH,
+                  height: 56,
+                  borderLeftWidth: 1,
+                  borderRightWidth: 1,
+                  borderColor: colors.border,
+                }}
+              />
+              <ScrollView
+                ref={timeAdjustScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={TIME_ADJUST_ITEM_WIDTH}
+                decelerationRate="fast"
+                contentContainerStyle={{
+                  // Modal inner width = 300 - 40 padding = 260; center = 130.
+                  // Pad so the first/last item can land under the center.
+                  paddingHorizontal: 130 - TIME_ADJUST_ITEM_WIDTH / 2,
+                }}
+                onMomentumScrollEnd={(e) => {
+                  const idx = Math.round(
+                    e.nativeEvent.contentOffset.x / TIME_ADJUST_ITEM_WIDTH,
+                  );
+                  const clamped = Math.max(
+                    0,
+                    Math.min(timeAdjustOptions.length - 1, idx),
+                  );
+                  setTimeAdjustMinutes(timeAdjustOptions[clamped]);
+                }}
+              >
+                {timeAdjustOptions.map((m) => (
+                  <View
+                    key={m}
+                    style={{
+                      width: TIME_ADJUST_ITEM_WIDTH,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: colors.text,
+                        fontSize: m === timeAdjustMinutes ? 20 : 14,
+                        opacity: m === timeAdjustMinutes ? 1 : 0.5,
+                        fontWeight: m === timeAdjustMinutes ? "600" : "400",
+                      }}
+                    >
+                      {m}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: colors.text,
+                  fontSize: 11,
+                  opacity: 0.6,
+                  marginTop: 2,
+                }}
+              >
+                minutes
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={() => setOpenTimeAdjust(false)}
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  paddingVertical: 10,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={[styles.text, { color: colors.text }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={applyTimeAdjust}
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  paddingVertical: 10,
+                  alignItems: "center",
+                  backgroundColor: colors.accent,
+                }}
+              >
+                <Text style={[styles.text, { color: "#fff" }]}>Confirm</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1732,6 +2087,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 10,
     marginBottom: 20,
+    gap: 16,
   },
 
   doneBtn: {
