@@ -265,7 +265,7 @@ export default function SocialScreen() {
             <TouchableOpacity
               style={[
                 GlobalStyles.modal_button,
-                { backgroundColor: colors.accent, borderColor: colors.border },
+                { backgroundColor: colors.border, borderColor: colors.border },
               ]}
               onPress={handleAddContact}
             >
