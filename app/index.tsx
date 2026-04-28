@@ -49,6 +49,7 @@ type TimelineEvent = {
   startMinute: number;
   endHour: number;
   endMinute: number;
+  date?: Date;
   type: "meeting" | "open";
   originalEvent?: Calendar.Event;
 };
@@ -644,6 +645,7 @@ function HomeScreen() {
           startMinute: start.getMinutes(),
           endHour: end.getHours(),
           endMinute: end.getMinutes(),
+          date: undefined,
           type: "meeting" as const,
           originalEvent: event,
         };
@@ -673,6 +675,13 @@ function HomeScreen() {
           );
         }
         // for manual events, always show on Today for now
+        if (event.date) {
+          return (
+            event.date.getFullYear() === selected.getFullYear() &&
+            event.date.getMonth() === selected.getMonth() &&
+            event.date.getDate() === selected.getDate()
+          );
+        }
         return selectedDay === 0;
       })
       .sort((a, b) => {
@@ -1165,6 +1174,7 @@ function HomeScreen() {
                   startMinute: newEvent.startTime.getMinutes(),
                   endHour: newEvent.endTime.getHours(),
                   endMinute: newEvent.endTime.getMinutes(),
+                  date: newEvent.date,
                   type: "meeting",
                 };
 
